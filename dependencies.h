@@ -8,97 +8,96 @@
 #define debug_level 0
 #define max_size 20000
 #define SHA256_LEN 65
-typedef struct fim_entry_data_poc {
-    char *path; // Duda ~~~~~~
 
-    // Checksum attributes
-    unsigned int size;
-    char * perm;
-    char * attributes;
-    char * uid;
-    char * gid;
-    char * user_name;
-    char * group_name;
-    unsigned int mtime;
-    unsigned long int inode;
-    char * hash_md5;
-    char * hash_sha1;
-    char * hash_sha256;
+// typedef struct fim_file_data_poc {
+//     char *path; // Duda ~~~~~~
 
-    // Options
-    unsigned int mode;
-    time_t last_event;
-    int entry_type;
-    unsigned long int dev;
-    unsigned int scanned;
-    int options;
-    char * checksum;
-} fim_entry_data_poc;
+//     // Checksum attributes
+//     unsigned int size;
+//     char * perm;
+//     char * attributes;
+//     char * uid;
+//     char * gid;
+//     char * user_name;
+//     char * group_name;
+//     unsigned int mtime;
+//     unsigned long int inode;
+//     char * hash_md5;
+//     char * hash_sha1;
+//     char * hash_sha256;
+
+//     // Options
+//     unsigned int mode;
+//     time_t last_event;
+//     int entry_type;
+//     unsigned long int dev;
+//     unsigned int scanned;
+//     int options;
+//     char * checksum;
+// } fim_file_data_poc;
 
 typedef char os_md5[33];
 typedef char os_sha1[65];
 typedef char os_sha256[65];
 
 
-static const char *FIM_EVENT_TYPE[] = {
-    "added",
-    "deleted",
-    "modified"
-};
+// static const char *FIM_EVENT_TYPE[] = {
+//     "added",
+//     "deleted",
+//     "modified"
+// };
 
-static const char *FIM_EVENT_MODE[] = {
-    "scheduled",
-    "real-time",
-    "whodata"
-};
+// static const char *FIM_EVENT_MODE[] = {
+//     "scheduled",
+//     "real-time",
+//     "whodata"
+// };
 
-static const char *FIM_ENTRY_TYPE[] = {
-    "file",
-    "registry"
-};
+// static const char *FIM_ENTRY_TYPE[] = {
+//     "file",
+//     "registry"
+// };
 
-typedef enum fim_entry_type {
-    FIM_FILE,
-    FIM_REGISTRY
-} fim_entry_type;
+// typedef enum fim_entry_type {
+//     FIM_FILE,
+//     FIM_REGISTRY
+// } fim_entry_type;
 
-typedef enum fim_event_mode {
-    FIM_SCHEDULED,
-    FIM_REALTIME,
-    FIM_WHODATA
-} fim_event_mode;
+// typedef enum fim_event_mode {
+//     FIM_SCHEDULED,
+//     FIM_REALTIME,
+//     FIM_WHODATA
+// } fim_event_mode;
 
-typedef struct fim_entry_data {
-    // Checksum attributes
-    unsigned int size;
-    char * perm;
-    char * attributes;
-    char * uid;
-    char * gid;
-    char * user_name;
-    char * group_name;
-    unsigned int mtime;
-    unsigned long int inode;
-    os_md5 hash_md5;
-    os_sha1 hash_sha1;
-    os_sha256 hash_sha256;
+// typedef struct fim_file_data {
+//     // Checksum attributes
+//     unsigned int size;
+//     char * perm;
+//     char * attributes;
+//     char * uid;
+//     char * gid;
+//     char * user_name;
+//     char * group_name;
+//     unsigned int mtime;
+//     unsigned long int inode;
+//     os_md5 hash_md5;
+//     os_sha1 hash_sha1;
+//     os_sha256 hash_sha256;
 
-    // Options
-    fim_event_mode mode;
-    time_t last_event;
-    fim_entry_type entry_type;
-    unsigned long int dev;
-    unsigned int scanned;
-    int options;
-    os_sha1 checksum;
-} fim_entry_data;
+//     // Options
+//     fim_event_mode mode;
+//     time_t last_event;
+//     fim_entry_type entry_type;
+//     unsigned long int dev;
+//     unsigned int scanned;
+//     int options;
+//     os_sha1 checksum;
+// } fim_file_data;
 
-typedef struct fim_entry {
-    char ** path;
-    fim_entry_data *data;
-} fim_entry;
-
-
+// typedef struct fim_entry {
+//     char ** path;
+//     fim_file_data *data;
+// } fim_entry;
 
 char **os_AddStrArray(const char *str, char **array);
 int w_is_file(const char * const file);
@@ -112,7 +111,7 @@ gid_t Privsep_GetGroup(const char *name) __attribute__((nonnull));
 #define os_strdup(x,y) ((y = strdup(x)))?(void)1:exit(1)
 #define w_strdup(x,y) ({ int retstr = 0; if (x) { os_strdup(x, y);} else retstr = 1; retstr;})
 #define os_free(x) if(x){free(x);x=NULL;}
-void free_entry_data(fim_entry_data * data);
+void free_entry_data(fim_file_data * data);
 #define wdb_finalize(x) { if (x) { sqlite3_finalize(x); x = NULL; } }
 #define w_rwlock_init(x, y) { int error = pthread_rwlock_init(x, y); if (error) exit(1); }
 #define w_rwlock_rdlock(x) { int error = pthread_rwlock_rdlock(x); if (error) exit(1); }

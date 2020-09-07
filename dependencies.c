@@ -195,7 +195,7 @@ gid_t Privsep_GetGroup(const char *name)
 }
 
 
-void free_entry_data(fim_entry_data * data) {
+void free_entry_data(fim_file_data * data) {
     if (!data) {
         return;
     }

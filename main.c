@@ -36,7 +36,7 @@ void checksum_callback(fim_entry *entry, void * arg) {
     return;
 }
 
-static fim_entry_data *fill_entry_struct(
+static fim_file_data *fill_entry_struct(
     unsigned int size,
     const char * perm,
     const char * attributes,
@@ -57,7 +57,7 @@ static fim_entry_data *fill_entry_struct(
     int options,
     const char * checksum
 ) {
-    fim_entry_data *data = calloc(1, sizeof(fim_entry_data));
+    fim_file_data *data = calloc(1, sizeof(fim_file_data));
     data->size = size;
     data->perm = strdup(perm);
     data->attributes = strdup(attributes);
@@ -84,7 +84,7 @@ void announce_function(char *function) {
     printf("\n***Testing %s***\n", function);
 }
 
-int print_fim_entry_data_full(fim_entry *entry) {
+int print_fim_file_data_full(fim_entry *entry) {
     unsigned int i;
     for (i = 0; entry->path[i]; i++) {
         printf("PATH: %s\n", entry->path[i]);
@@ -111,7 +111,7 @@ int print_fim_entry_data_full(fim_entry *entry) {
     }
 }
 
-int print_fim_entry_data(fim_entry *entry) {
+int print_fim_file_data(fim_entry *entry) {
     unsigned int i;
     for (i = 0; entry->path[i]; i++) {
         printf("%s", entry->path[i]);
@@ -174,7 +174,7 @@ int test_fim_db_update() {
     if (!strcmp(updated_entry->path[0], resp->path[0]) &&
         updated_entry->data->inode == resp->data->inode &&
         updated_entry->data->dev == resp->data->dev) {
-        print_fim_entry_data_full(updated_entry);
+        print_fim_file_data_full(updated_entry);
 
     }
     free_entry(resp);
@@ -188,13 +188,13 @@ int fill_entries_random(unsigned int num_entries) {
 
     unsigned int i = 0;
     for(i = 0; i < num_entries; i++) {
-        fim_entry_data *data = fill_entry_struct(rand(), "rwxrwxrwx", "attrib", "0", "0", "root", "root", rand() % 1500000000, rand() % 200000, "ce6bb0ddf75be26c928ce2722e5f1625", "53bf474924c7876e2272db4a62fc64c8e2c18b51", "c2de156835127560dc1e8139846da7b7d002ac1b72024f6efb345cf27009c54c", rand() % 3, rand() % 1500000000, rand() % 3, rand() % 1024, 0, 137, "ce6bb0ddf75be26c928ce2722e5f1625");
+        fim_file_data *data = fill_entry_struct(rand(), "rwxrwxrwx", "attrib", "0", "0", "root", "root", rand() % 1500000000, rand() % 200000, "ce6bb0ddf75be26c928ce2722e5f1625", "53bf474924c7876e2272db4a62fc64c8e2c18b51", "c2de156835127560dc1e8139846da7b7d002ac1b72024f6efb345cf27009c54c", rand() % 3, rand() % 1500000000, rand() % 3, rand() % 1024, 0, 137, "ce6bb0ddf75be26c928ce2722e5f1625");
         char *path = calloc(512, sizeof(char));
         snprintf(path, 512, "%s%i", DEF_PATH, i);
 
         if (fim_db_insert(path, data)) {
             printf("Error in fim_db_insert() function: %s\n", path);
-            //print_fim_entry_data_full(data);
+            //print_fim_file_data_full(data);
             return FIMDB_ERR;
         }
         free_entry_data(data);
@@ -205,7 +205,7 @@ int fill_entries_random(unsigned int num_entries) {
 }
 
 
-int fim_verify_sample_entries(const char *file_path, fim_entry_data *entry) {
+int fim_verify_sample_entries(const char *file_path, fim_file_data *entry) {
    fim_entry *saved_file = fim_db_get_unique_file(file_path, entry->inode, entry->dev);
 
     if (!saved_file) {
@@ -329,7 +329,7 @@ void fim_dir(int fd, const char * path) {
 #define MAX_SIZE 1073741824
 void fim_file(int fd, const char * path, struct stat * statbuf) {
     char sha256[65];
-    fim_entry_data *data = calloc(1, sizeof(fim_entry_data));
+    fim_file_data *data = calloc(1, sizeof(fim_file_data));
 
 
     /* Owner and group */
@@ -385,10 +385,10 @@ void fim_file(int fd, const char * path, struct stat * statbuf) {
     } else {
         strncpy(data->hash_sha256, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", sizeof(os_sha256) - 1);
     }
-    //print_fim_entry_data_full(data);
+    //print_fim_file_data_full(data);
     if (fim_db_insert(path, data)) {
         printf("Error in fim_db_insert() function: %s\n", path);
-        //print_fim_entry_data_full(data);
+        //print_fim_file_data_full(data);
         exit(1);
     }
     free_entry_data(data);
@@ -448,7 +448,7 @@ int basic_test() {
     }
     gettime(&end);
 
-    print_fim_entry_data(respx);
+    print_fim_file_data(respx);
     free_entry(respx);
 
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
@@ -467,7 +467,7 @@ int basic_test() {
 
     gettime(&end);
 
-    print_fim_entry_data(resp2);
+    print_fim_file_data(resp2);
     free_entry(resp2);
 
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
@@ -624,7 +624,7 @@ int main(int argc, char *argv[]) {
 
         gettime(&end);
 
-        //print_fim_entry_data(respx);
+        //print_fim_file_data(respx);
 
         printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
     }
