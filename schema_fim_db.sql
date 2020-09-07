@@ -1,27 +1,26 @@
 /*
  * SQL Schema for FIM database
- * Copyright (C) 2015-2019, Wazuh Inc.
+ * Copyright (C) 2015-2020, Wazuh Inc.
  *
  * This program is a free software, you can redistribute it
  * and/or modify it under the terms of GPLv2.
  */
 
-CREATE TABLE IF NOT EXISTS entry_path (
+CREATE TABLE IF NOT EXISTS file_entry (
     path TEXT NOT NULL,
     inode_id INTEGER,
     mode INTEGER,
     last_event INTEGER,
-    entry_type INTEGER,
     scanned INTEGER,
     options INTEGER,
     checksum TEXT NOT NULL,
     PRIMARY KEY(path)
 );
 
-CREATE INDEX IF NOT EXISTS path_index ON entry_path (path);
-CREATE INDEX IF NOT EXISTS inode_index ON entry_path (inode_id);
+CREATE INDEX IF NOT EXISTS path_index ON file_entry (path);
+CREATE INDEX IF NOT EXISTS inode_index ON file_entry (inode_id);
 
-CREATE TABLE IF NOT EXISTS entry_data (
+CREATE TABLE IF NOT EXISTS file_data (
     dev INTEGER,
     inode INTEGER,
     size INTEGER,
@@ -38,4 +37,35 @@ CREATE TABLE IF NOT EXISTS entry_data (
     PRIMARY KEY(dev, inode)
 );
 
-CREATE INDEX IF NOT EXISTS dev_inode_index ON entry_data (dev, inode);
+CREATE INDEX IF NOT EXISTS dev_inode_index ON file_data (dev, inode);
+
+CREATE TABLE IF NOT EXISTS registry_key (
+    path TEXT NOT NULL,
+    data_id INTEGER,
+    perm TEXT,
+    uid INTEGER,
+    gid INTEGER,
+    user_name TEXT,
+    group_name TEXT,
+    scanned INTEGER,
+    options INTEGER,
+    checksum TEXT NOT NULL,
+    PRIMARY KEY(path)
+);
+
+CREATE INDEX IF NOT EXISTS path_index ON registry_key (path);
+CREATE INDEX IF NOT EXISTS inode_index ON registry_key (data_id);
+
+CREATE TABLE IF NOT EXISTS registry_data (
+    key_id INTEGER,
+    name TEXT,
+    type INTEGER,
+    /* data TEXT, */
+    scanned INTEGER,
+    checksum TEXT NOT NULL,
+    last_event INTEGER,
+    options INTEGER,
+    PRIMARY KEY(key_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS key_name_index ON registry_data (key_id, name);
