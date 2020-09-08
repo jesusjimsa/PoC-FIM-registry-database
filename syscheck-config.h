@@ -148,54 +148,6 @@ typedef struct whodata_dir_status whodata_dir_status;
 
 typedef enum fim_type {FIM_TYPE_FILE = 0, FIM_TYPE_REGISTRY} fim_type;
 
-typedef struct whodata_evt {
-    char *user_id;
-    char *user_name;
-    char *process_name;
-    char *path;
-#ifndef WIN32
-    char *group_id;  // Linux
-    char *group_name;  // Linux
-    char *audit_uid;  // Linux
-    char *audit_name;  // Linux
-    char *effective_uid;  // Linux
-    char *effective_name;  // Linux
-    char *inode;  // Linux
-    char *dev;  // Linux
-    char *parent_name; // Linux
-    char *parent_cwd;
-    int ppid;  // Linux
-    char *cwd; // Linux
-    unsigned int process_id;
-#else
-    unsigned __int64 process_id;
-    unsigned int mask;
-    char scan_directory;
-    int config_node;
-#endif
-} whodata_evt;
-
-#ifdef WIN32
-
-typedef struct whodata_dir_status {
-    int status;
-    char object_type;
-    SYSTEMTIME last_check;
-} whodata_dir_status;
-
-typedef ULARGE_INTEGER whodata_directory;
-
-typedef struct whodata {
-    OSHash *fd;                         // Open file descriptors
-    OSHash *directories;                // Directories checked by whodata mode
-    int interval_scan;                  // Time interval between scans of the checking thread
-    whodata_dir_status *dirs_status;    // Status list
-    char **device;                       // Hard disk devices
-    char **drive;                        // Drive letter
-} whodata;
-
-#endif /* End WIN32*/
-
 typedef struct registry {
     char *entry;
     int arch;

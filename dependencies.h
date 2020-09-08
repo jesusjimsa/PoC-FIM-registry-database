@@ -1,3 +1,5 @@
+#ifndef DEPS
+#define DEPS
 #include <time.h>
 #include <sys/types.h>
 #include <string.h>
@@ -87,7 +89,6 @@ typedef char os_md5[33];
 typedef char os_sha1[65];
 typedef char os_sha256[65];
 
-
 typedef struct fim_tmp_file {
     union { //type_storage
         FILE *fd;
@@ -170,3 +171,4 @@ int file_sha256(int fd, char sum[SHA256_LEN]);
 #define os_realloc(x,y,z) ((z = (__typeof__(z))realloc(x,y)))?(void)1:merror("memory")
 
 #define sqlite_strdup(x,y) ({ if (x) { os_strdup(x, y); } else (void)0; })
+#endif
