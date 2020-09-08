@@ -1,4 +1,5 @@
 #include "fim_db.h"
+#include "dependencies.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -24,46 +25,43 @@ void announce_function(char *function) {
 }
 
 
-static fim_file_data *fill_entry_struct(
-    unsigned int size,
-    const char * perm,
-    const char * attributes,
-    const char * uid,
-    const char * gid,
-    const char * user_name,
-    const char * group_name,
-    unsigned int mtime,
-    unsigned long int inode,
-    const char * hash_md5,
-    const char * hash_sha1,
-    const char * hash_sha256,
-    int mode,
-    time_t last_event,
-    unsigned long int dev,
-    unsigned int scanned,
-    int options,
-    const char * checksum
-) {
-    fim_file_data *data = calloc(1, sizeof(fim_file_data));
+static fim_registry_value_data *fill_registry_value_struct(char * name, unsigned int type, unsigned int size,
+                                                           os_md5 hash_md5, os_sha1 hash_sha1, os_sha256 hash_sha256,
+                                                           unsigned int mtime, time_t last_event, unsigned int scanned,
+                                                           os_sha1 checksum, fim_event_mode mode) {
+
+    fim_registry_value_data *data = calloc(1, sizeof(fim_registry_value_data));
+
+    data->name = strdup(name);
+    data->type = type;
     data->size = size;
+    data->hash_md5 = strdup(hash_md5);
+    data->hash_sha1 = strdup(hash_sha1);
+    data->hash_sha256 = strdup(hash_sha256);
+    data->mtime = mtime;
+    data->last_event = last_event;
+    data->scanned = scanned;
+    data->checksum = strdup(checksum);
+    data->mode = mode;
+
+    return data;
+}
+
+static fim_registry_key *fill_registry_key_struct(char * path, char * perm, char * uid, char * gid, char * user_name,
+                                                  char * group_name, int options, unsigned int scanned,
+                                                  os_sha1 checksum) {
+
+    fim_registry_key *data = calloc(1, sizeof(fim_registry_key));
+
+    data->path = strdup(path);
     data->perm = strdup(perm);
-    data->attributes = strdup(attributes);
     data->uid = strdup(uid);
     data->gid = strdup(gid);
     data->user_name = strdup(user_name);
-    data->group_name = strdup(group_name);;
-    data->mtime = mtime;
-    data->inode = inode;
-    strncpy(data->hash_md5, hash_md5, sizeof(os_md5) - 1);
-    strncpy(data->hash_sha1, hash_sha1, sizeof(hash_sha1) - 1);
-    strncpy(data->hash_sha256, hash_sha256, sizeof(hash_sha256) - 1);
-    data->mode = mode;
-    data->last_event = last_event;
-    data->dev = dev;
-    data->scanned = scanned;
+    data->group_name = strdup(group_name);
     data->options = options;
-    strncpy(data->checksum, checksum, sizeof(hash_sha1) - 1);
-    return data;
+    data->scanned = scanned;
+    data->checksum = strdup(checksum);
 }
 
 int print_fim_file_data(fim_entry *entry) {
@@ -132,6 +130,7 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_entries) {
 
     unsigned int i = 0;
     for(i = 0; i < num_entries; i++) {
+        fim_entry
         fim_file_data *data = fill_entry_struct(rand(), "rwxrwxrwx", "attrib", "0", "0", "root", "root",
                                                 rand() % 1500000000, rand() % 200000,
                                                 "ce6bb0ddf75be26c928ce2722e5f1625",
