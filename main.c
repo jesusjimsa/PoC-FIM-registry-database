@@ -92,6 +92,38 @@ int print_fim_file_data(fim_entry *entry) {
     }
 }
 
+void print_fim_registry_key_data(fim_entry *entry) {
+    printf("\n~~~ Registry key ~~~\n");
+    printf("\n---------------------------------\n");
+    printf("Path: %s\n", entry->registry_entry.key->path);
+    printf("Perm: %s\n", entry->registry_entry.key->perm);
+    printf("UID: %s\n", entry->registry_entry.key->uid);
+    printf("GID: %s\n", entry->registry_entry.key->gid);
+    printf("User name: %s\n", entry->registry_entry.key->user_name);
+    printf("Group name: %s\n", entry->registry_entry.key->group_name);
+    printf("Options: %d\n", entry->registry_entry.key->options);
+    printf("Scanned: %d\n", entry->registry_entry.key->scanned);
+    printf("Checksum: %s\n", entry->registry_entry.key->checksum);
+    printf("---------------------------------\n");
+}
+
+void print_fim_registry_value_data(fim_entry *entry) {
+    printf("\n~~~ Registry value ~~~\n");
+    printf("\n---------------------------------\n");
+    printf("Name: %s\n", entry->registry_entry.value->name);
+    printf("Type: %d\n", entry->registry_entry.value->type);
+    printf("Size: %d\n", entry->registry_entry.value->size);
+    printf("Hash MD5: %s\n", entry->registry_entry.value->hash_md5);
+    printf("Hash SHA1: %s\n", entry->registry_entry.value->hash_sha1);
+    printf("Hash SHA256: %s\n", entry->registry_entry.value->hash_sha256);
+    printf("Mtime: %d\n", entry->registry_entry.value->mtime);
+    printf("Last event: %lu\n", entry->registry_entry.value->last_event);
+    printf("Scanned: %d\n", entry->registry_entry.value->scanned);
+    printf("Checksum: %s\n", entry->registry_entry.value->checksum);
+    printf("Mode: %i\n", entry->registry_entry.value->mode);
+    printf("---------------------------------\n");
+}
+
 /**
  * TODO: Change this function to fill registries instead of files
  */
