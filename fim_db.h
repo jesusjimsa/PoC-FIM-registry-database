@@ -8,19 +8,22 @@
 
 
 #include "dependencies.h"
-#include "syscheck-config.h"
 
 #define FIM_DB_MEMORY_PATH  ":memory:"
 
+#define DEFAULTDIR "."
+
 #ifndef WIN32
-#define FIM_DB_DISK_PATH    DEFAULTDIR "/queue/fim/db/fim.db"
+#define FIM_DB_DISK_PATH    DEFAULTDIR "fim.db"
 #define FIM_DB_TMPDIR       DEFAULTDIR "/tmp/"
 #else
 #define FIM_DB_DISK_PATH    "queue/fim/db/fim.db"
 #define FIM_DB_TMPDIR       "tmp/"
 #endif
 
+#ifndef COMMIT_INTERVAL
 #define COMMIT_INTERVAL     2
+#endif
 
 #define FIMDB_OK 0   // Successful result.
 #define FIMDB_ERR -1 // Generic error.

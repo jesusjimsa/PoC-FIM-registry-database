@@ -11,6 +11,8 @@
 #ifndef SYSCHECKC_H
 #define SYSCHECKC_H
 
+#include "dependencies.h"
+
 typedef enum fim_event_mode {
     FIM_SCHEDULED,
     FIM_REALTIME,

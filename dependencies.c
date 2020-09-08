@@ -172,6 +172,19 @@ void merror(const char *msg, ...) {
     va_end(ap);
 }
 
+void minfo(const char *msg, ...) {
+    va_list ap;
+    va_start(ap, msg);
+    char buffer[max_size];
+    vsnprintf(buffer, max_size, msg, ap);
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+    char timestamp[26];
+    strftime(timestamp, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+    fprintf(stdout, "%s %s\n", timestamp, buffer);
+    va_end(ap);
+}
+
 uid_t Privsep_GetUser(const char *name)
 {
     struct passwd *pw;
@@ -226,8 +239,8 @@ void free_entry_data(fim_file_data * data) {
 
 void free_entry(fim_entry * entry) {
     if (entry) {
-        w_FreeArray(entry->path);
-        free_entry_data(entry->data);
+        free(entry->file_entry.path);
+        free_entry_data(entry->file_entry.data);
         free(entry);
     }
 
@@ -275,4 +288,84 @@ int file_sha256(int fd, char sum[SHA256_LEN]) {
 
     sum[SHA256_LEN - 1] = '\0';
     return 0;
+}
+
+void randombytes(void *ptr, size_t length) {
+    char failed = 0;
+
+#ifdef WIN32
+    static HCRYPTPROV prov = 0;
+
+    if (prov == 0) {
+        if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, 0)) {
+            if (GetLastError() == (DWORD)NTE_BAD_KEYSET) {
+                mdebug1("No default container was found. Attempting to create default container.");
+
+                if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET)) {
+                    merror("CryptAcquireContext Flag: NewKeySet (1): (%lx)", GetLastError());
+                    failed = 1;
+                }
+            }else if(GetLastError() == (DWORD)NTE_KEYSET_ENTRY_BAD){
+                mwarn("The agent's RSA key container for the random generator is corrupt. Resetting container...");
+
+                if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_DELETEKEYSET)){
+                    merror("CryptAcquireContext Flag: DeleteKeySet: (%lx)", GetLastError());
+                    failed = 1;
+                }
+                if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL, CRYPT_NEWKEYSET)) {
+                    merror("CryptAcquireContext Flag: NewKeySet (2): (%lx)", GetLastError());
+                    failed = 1;
+                }
+            } else {
+                merror("CryptAcquireContext no Flag: (%lx)", GetLastError());
+                failed = 1;
+            }
+        }
+    }
+    if (!failed && !CryptGenRandom(prov, length, ptr)) {
+        failed = 1;
+    }
+#else
+    static int fh = -1;
+    ssize_t ret;
+
+    if (fh < 0 && (fh = open("/dev/urandom", O_RDONLY | O_CLOEXEC), fh < 0 && (fh = open("/dev/random", O_RDONLY | O_CLOEXEC), fh < 0))) {
+        failed = 1;
+    } else {
+        ret = read(fh, ptr, length);
+
+        if (ret < 0 || (size_t)ret != length) {
+            failed = 1;
+        }
+    }
+
+#endif
+
+    if (failed) {
+        merror("randombytes failed for all possible methods for accessing random data");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void srandom_init(void) {
+    unsigned int seed;
+    randombytes(&seed, sizeof seed);
+    srandom(seed);
+}
+
+int os_random(void) {
+	int myrandom;
+	randombytes(&myrandom, sizeof(myrandom));
+	return myrandom % RAND_MAX;
+}
+
+int IsDir(const char *file) {
+    struct stat file_status;
+    if (stat(file, &file_status) < 0) {
+        return (-1);
+    }
+    if (S_ISDIR(file_status.st_mode)) {
+        return (0);
+    }
+    return (-1);
 }

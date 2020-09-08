@@ -41,7 +41,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_COUNT_PATH] = "SELECT count(*) FROM file_entry",
     [FIMDB_STMT_GET_COUNT_DATA] = "SELECT count(*) FROM file_data",
     [FIMDB_STMT_GET_INODE] = "SELECT inode FROM file_data where rowid=(SELECT inode_id FROM file_entry WHERE path = ?)",
-#ifdef WIN32
+// #ifdef WIN32
     [FIMDB_STMT_REPLACE_REG_DATA] = "INSERT OR REPLACE INTO registry_data (key_id, name, type, scanned, checksum, last_event, options) VALUES (?, ?, ?, ?, ?, ?, ?);",
     [FIMDB_STMT_REPLACE_REG_KEY] = "INSERT OR REPLACE INTO registry_key (path, data_id, perm, uid, gid, user_name, group_name, scanned, options, checksum) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
     [FIMDB_STMT_GET_REG_KEY] = "SELECT path, data_id, perm, uid, gid, user_name, group_name, scanned, options FROM registry_key WHERE path = ?;",
@@ -68,7 +68,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_REG_PATH_RANGE] = "SELECT path, data_id, perm, uid, gid, user_name, group_name, registry_key.scanned, registry_key.options, registry_key.checksum, key_id, name, type, registry_data.scanned, registry_data.checksum, last_event, registry_data.options FROM registry_key INNER JOIN registry_data ON registry_data.key_id = registry_key.data_id WHERE path BETWEEN ? and ? ORDER BY path;",
     [FIMDB_STMT_SET_REG_KEY_SCANNED] = "UPDATE registry_data SET scanned = 1 WHERE name = ? AND key_id = ?;",
     [FIMDB_STMT_SET_REG_DATA_SCANNED] = "UPDATE registry_key SET scanned = 0 WHERE path = ?;",
-#endif
+// #endif
 };
 
 /**
@@ -253,14 +253,14 @@ void fim_db_bind_get_inode_id(fdb_t *fim_sql, const char *file_path);
  */
 void fim_db_bind_get_path_inode(fdb_t *fim_sql, const char *file_path);
 
-#ifdef WIN32
+// #ifdef WIN32
 /**
  * @brief Decodes a row from the registry database to be saved in a registry key structure.
  *
  * @param stmt The statement to be decoded.
  * @return fim_entry* The filled structure.
  */
-static fim_entry*fim_db_decode_full_reg_row(sqlite3_stmt *stmt);
+static fim_entry *fim_db_decode_full_reg_row(sqlite3_stmt *stmt);
 
 /**
  * @brief
@@ -351,7 +351,7 @@ static void fim_db_bind_update_registry_data(fdb_t *fim_sql, fim_registry_value_
  */
 static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *registry_key);
 
-#endif
+// #endif
 
 fdb_t *fim_db_init(int storage) {
     fdb_t *fim;
@@ -532,7 +532,7 @@ fim_tmp_file *fim_db_create_temp_file(int storage) {
             return NULL;
         }
     } else {
-        file->list = W_Vector_init(100);
+        file->list = NULL;  // Here, there was a W_Vector_init(100)
     }
 
     return file;
@@ -546,7 +546,7 @@ void fim_db_clean_file(fim_tmp_file **file, int storage) {
         }
         os_free((*file)->path);
     } else {
-        W_Vector_free((*file)->list);
+        free((*file)->list);
     }
 
     os_free((*file));
@@ -722,10 +722,10 @@ int fim_db_process_read_file(fdb_t *fim_sql, fim_tmp_file *file, pthread_mutex_t
                     continue;
                 }
 
-                path = wstr_unescape_json(line);
+                // path = wstr_unescape_json(line);
             }
         } else {
-            path = wstr_unescape_json((char *) W_Vector_get(file->list, i));
+            // path = wstr_unescape_json((char *) W_Vector_get(file->list, i));
         }
 
         if (path) {
@@ -884,7 +884,7 @@ void fim_db_bind_range(fdb_t *fim_sql, int index, const char *start, const char 
     }
 }
 
-#ifdef WIN32
+// #ifdef WIN32
 static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, int index, char *name, int key_id) {
     if (index == FIMDB_STMT_SET_REG_DATA_UNSCANNED ||
         index == FIMDB_STMT_DELETE_REG_DATA ||
@@ -906,7 +906,7 @@ static void fim_db_bind_registry_path_range(fdb_t *fim_sql, int index, char *sta
         sqlite3_bind_text(fim_sql->stmt[index], 2, top, -1, NULL);
     }
 }
-#endif
+// #endif
 
 fim_entry *fim_db_get_path(fdb_t *fim_sql, const char *file_path) {
     fim_entry *entry = NULL;
@@ -1017,19 +1017,20 @@ int fim_db_insert(fdb_t *fim_sql, const char *file_path, fim_file_data *new, fim
     unsigned int nodes_count;
 
     // Add event
-    if (!saved) {
-        if (syscheck.file_limit_enabled) {
-            nodes_count = fim_db_get_count_file_entry(syscheck.database);
-            if (nodes_count >= syscheck.file_limit) {
-                mdebug1("Couldn't insert '%s' entry into DB. The DB is full, please check your configuration.",
-                        file_path);
-                return FIMDB_FULL;
-            }
-        }
-    }
+    // if (!saved) {
+    //     if (syscheck.file_limit_enabled) {
+    //         nodes_count = fim_db_get_count_file_entry(syscheck.database);
+    //         if (nodes_count >= syscheck.file_limit) {
+    //             mdebug1("Couldn't insert '%s' entry into DB. The DB is full, please check your configuration.",
+    //                     file_path);
+    //             return FIMDB_FULL;
+    //         }
+    //     }
+    // }
     // Modified event
 #ifndef WIN32
-    else if (new->inode != saved->inode) {
+    // else
+    if (new->inode != saved->inode) {
         fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_PATH_COUNT);
         fim_db_bind_path(fim_sql, FIMDB_STMT_GET_PATH_COUNT, file_path);
 
@@ -1084,12 +1085,12 @@ int fim_db_insert(fdb_t *fim_sql, const char *file_path, fim_file_data *new, fim
 void fim_db_callback_calculate_checksum(__attribute__((unused)) fdb_t *fim_sql, fim_entry *entry,
     __attribute__((unused))int storage, void *arg) {
 
-    EVP_MD_CTX *ctx = (EVP_MD_CTX *)arg;
-    if (entry->type == FIM_TYPE_FILE) {
-        EVP_DigestUpdate(ctx, entry->file_entry.data->checksum, strlen(entry->file_entry.data->checksum));
-    } else {
-        EVP_DigestUpdate(ctx, entry->registry_entry.value->checksum, strlen(entry->registry_entry.value->checksum));
-    }
+    // EVP_MD_CTX *ctx = (EVP_MD_CTX *)arg;
+    // if (entry->type == FIM_TYPE_FILE) {
+    //     EVP_DigestUpdate(ctx, entry->file_entry.data->checksum, strlen(entry->file_entry.data->checksum));
+    // } else {
+    //     EVP_DigestUpdate(ctx, entry->registry_entry.value->checksum, strlen(entry->registry_entry.value->checksum));
+    // }
 }
 
 int fim_db_data_checksum_range(fdb_t *fim_sql, const char *start, const char *top,
@@ -1105,11 +1106,11 @@ int fim_db_data_checksum_range(fdb_t *fim_sql, const char *start, const char *to
     char *str_pathuh = NULL;
     char *plain      = NULL;
 
-    EVP_MD_CTX *ctx_left = EVP_MD_CTX_create();
-    EVP_MD_CTX *ctx_right = EVP_MD_CTX_create();
+    // EVP_MD_CTX *ctx_left = EVP_MD_CTX_create();
+    // EVP_MD_CTX *ctx_right = EVP_MD_CTX_create();
 
-    EVP_DigestInit(ctx_left, EVP_sha1());
-    EVP_DigestInit(ctx_right, EVP_sha1());
+    // EVP_DigestInit(ctx_left, EVP_sha1());
+    // EVP_DigestInit(ctx_right, EVP_sha1());
 
     w_mutex_lock(mutex);
 
@@ -1131,7 +1132,7 @@ int fim_db_data_checksum_range(fdb_t *fim_sql, const char *start, const char *to
             os_strdup(entry->file_entry.path, str_pathlh);
         }
         //Type of storage not required
-        fim_db_callback_calculate_checksum(fim_sql, entry, FIM_DB_DISK, (void *)ctx_left);
+        // fim_db_callback_calculate_checksum(fim_sql, entry, FIM_DB_DISK, (void *)ctx_left);
         free_entry(entry);
     }
 
@@ -1149,7 +1150,7 @@ int fim_db_data_checksum_range(fdb_t *fim_sql, const char *start, const char *to
             os_strdup(entry->file_entry.path, str_pathuh);
         }
         //Type of storage not required
-        fim_db_callback_calculate_checksum(fim_sql, entry, FIM_DB_DISK, (void *)ctx_right);
+        // fim_db_callback_calculate_checksum(fim_sql, entry, FIM_DB_DISK, (void *)ctx_right);
         free_entry(entry);
     }
 
@@ -1161,25 +1162,25 @@ int fim_db_data_checksum_range(fdb_t *fim_sql, const char *start, const char *to
     }
 
     // Send message with checksum of first half
-    EVP_DigestFinal_ex(ctx_left, digest, &digest_size);
-    OS_SHA1_Hexdigest(digest, hexdigest);
-    plain = dbsync_check_msg("syscheck", INTEGRITY_CHECK_LEFT, id, start, str_pathlh, str_pathuh, hexdigest);
-    fim_send_sync_msg(plain);
-    os_free(plain);
+    // EVP_DigestFinal_ex(ctx_left, digest, &digest_size);
+    // OS_SHA1_Hexdigest(digest, hexdigest);
+    // plain = dbsync_check_msg("syscheck", INTEGRITY_CHECK_LEFT, id, start, str_pathlh, str_pathuh, hexdigest);
+    // fim_send_sync_msg(plain);
+    // os_free(plain);
 
     // Send message with checksum of second half
-    EVP_DigestFinal_ex(ctx_right, digest, &digest_size);
-    OS_SHA1_Hexdigest(digest, hexdigest);
-    plain = dbsync_check_msg("syscheck", INTEGRITY_CHECK_RIGHT, id, str_pathuh, top, "", hexdigest);
-    fim_send_sync_msg(plain);
-    os_free(plain);
-    os_free(str_pathuh);
+    // EVP_DigestFinal_ex(ctx_right, digest, &digest_size);
+    // OS_SHA1_Hexdigest(digest, hexdigest);
+    // plain = dbsync_check_msg("syscheck", INTEGRITY_CHECK_RIGHT, id, str_pathuh, top, "", hexdigest);
+    // fim_send_sync_msg(plain);
+    // os_free(plain);
+    // os_free(str_pathuh);
 
     retval = FIMDB_OK;
 
 end:
-    EVP_MD_CTX_destroy(ctx_left);
-    EVP_MD_CTX_destroy(ctx_right);
+    // EVP_MD_CTX_destroy(ctx_left);
+    // EVP_MD_CTX_destroy(ctx_right);
     os_free(str_pathlh);
     os_free(str_pathuh);
     return retval;
@@ -1197,30 +1198,30 @@ void fim_db_remove_path(fdb_t *fim_sql, fim_entry *entry, pthread_mutex_t *mutex
 
     if(entry->type == FIM_TYPE_FILE) {
 
-        conf = fim_configuration_directory(entry->file_entry.path, "file");
+        // conf = fim_configuration_directory(entry->file_entry.path, "file");
 
         if(conf > -1) {
-            switch (mode) {
+            // switch (mode) {
             /* Don't send alert if received mode and mode in configuration aren't the same */
-            case FIM_REALTIME:
-                if (!(syscheck.opts[conf] & REALTIME_ACTIVE)) {
-                    return;     // LCOV_EXCL_LINE
-                }
-                break;
+            // case FIM_REALTIME:
+            //     if (!(syscheck.opts[conf] & REALTIME_ACTIVE)) {
+            //         return;     // LCOV_EXCL_LINE
+            //     }
+            //     break;
 
-            case FIM_WHODATA:
-                if (!(syscheck.opts[conf] & WHODATA_ACTIVE)) {
-                    return;     // LCOV_EXCL_LINE
-                }
-                break;
+            // case FIM_WHODATA:
+            //     if (!(syscheck.opts[conf] & WHODATA_ACTIVE)) {
+            //         return;     // LCOV_EXCL_LINE
+            //     }
+            //     break;
 
-            case FIM_SCHEDULED:
-                if (!(syscheck.opts[conf] & SCHEDULED_ACTIVE)) {
-                    return;     // LCOV_EXCL_LINE
-                }
-                break;
+            // case FIM_SCHEDULED:
+            //     if (!(syscheck.opts[conf] & SCHEDULED_ACTIVE)) {
+            //         return;     // LCOV_EXCL_LINE
+            //     }
+            //     break;
 
-            }
+            // }
         } else {
             mdebug2(FIM_DELETE_EVENT_PATH_NOCONF, entry->file_entry.path);
             return;
@@ -1267,47 +1268,47 @@ void fim_db_remove_path(fdb_t *fim_sql, fim_entry *entry, pthread_mutex_t *mutex
 
     if (send_alert && rows >= 1) {
         whodata_evt *whodata_event = (whodata_evt *) w_evt;
-        cJSON * json_event      = NULL;
+        // cJSON * json_event      = NULL;
         char * json_formatted    = NULL;
         int pos = 0;
         const char *FIM_ENTRY_TYPE[] = {"file", "registry"};
 
         // Obtaining the position of the directory, in @syscheck.dir, where @entry belongs
-        if (pos = fim_configuration_directory(entry->file_entry.path,
-            FIM_ENTRY_TYPE[entry->type]), pos < 0) {
-            goto end;
-        }
+        // if (pos = fim_configuration_directory(entry->file_entry.path,
+        //     FIM_ENTRY_TYPE[entry->type]), pos < 0) {
+        //     goto end;
+        // }
 
-        json_event = fim_json_event(entry->file_entry.path, NULL, entry->file_entry.data, pos, FIM_DELETE, mode,
-                                    whodata_event, NULL);
+        // json_event = fim_json_event(entry->file_entry.path, NULL, entry->file_entry.data, pos, FIM_DELETE, mode,
+        //                             whodata_event, NULL);
 
-        if (!strcmp(FIM_ENTRY_TYPE[entry->type], "file") && syscheck.opts[pos] & CHECK_SEECHANGES) {
-            if (syscheck.disk_quota_enabled) {
-                char *full_path;
-                full_path = seechanges_get_diff_path(entry->file_entry.path);
+        // if (!strcmp(FIM_ENTRY_TYPE[entry->type], "file") && syscheck.opts[pos] & CHECK_SEECHANGES) {
+        //     if (syscheck.disk_quota_enabled) {
+        //         char *full_path;
+                // full_path = seechanges_get_diff_path(entry->file_entry.path);
 
-                if (full_path != NULL && IsDir(full_path) == 0) {
-                    syscheck.diff_folder_size -= (DirSize(full_path) / 1024);   // Update diff_folder_size
+                // if (full_path != NULL && IsDir(full_path) == 0) {
+                    // syscheck.diff_folder_size -= (DirSize(full_path) / 1024);   // Update diff_folder_size
 
-                    if (!syscheck.disk_quota_full_msg) {
-                        syscheck.disk_quota_full_msg = true;
-                    }
-                }
+                    // if (!syscheck.disk_quota_full_msg) {
+                    //     syscheck.disk_quota_full_msg = true;
+                    // }
+                // }
 
-                os_free(full_path);
-            }
+                // os_free(full_path);
+            // }
 
-            delete_target_file(entry->file_entry.path);
-        }
+            // delete_target_file(entry->file_entry.path);
+        // }
 
-        if (json_event) {
+        /* if (json_event) {
             mdebug2(FIM_FILE_MSG_DELETE, entry->file_entry.path);
             json_formatted = cJSON_PrintUnformatted(json_event);
             send_syscheck_msg(json_formatted);
 
             os_free(json_formatted);
             cJSON_Delete(json_event);
-        }
+        } */
     }
 
 end:
@@ -1358,39 +1359,39 @@ int fim_db_set_scanned(fdb_t *fim_sql, char *path) {
 void fim_db_callback_save_path(__attribute__((unused))fdb_t * fim_sql, fim_entry *entry, int storage, void *arg) {
     char *path = entry->type == FIM_TYPE_FILE ? entry->file_entry.path : entry->registry_entry.key->path;
 
-    char *base = wstr_escape_json(path);
-    if (base == NULL) {
-        merror("Error escaping '%s'", path);
-        return;
-    }
+//     char *base = wstr_escape_json(path);
+//     if (base == NULL) {
+//         merror("Error escaping '%s'", path);
+//         return;
+//     }
 
-    if (storage == FIM_DB_DISK) { // disk storage enabled
-        if ((size_t)fprintf(((fim_tmp_file *) arg)->fd, "%s\n", base) != (strlen(base) + sizeof(char))) {
-            merror("%s - %s", path, strerror(errno));
-            goto end;
-        }
+//     if (storage == FIM_DB_DISK) { // disk storage enabled
+//         if ((size_t)fprintf(((fim_tmp_file *) arg)->fd, "%s\n", base) != (strlen(base) + sizeof(char))) {
+//             merror("%s - %s", path, strerror(errno));
+//             goto end;
+//         }
 
-        fflush(((fim_tmp_file *) arg)->fd);
+//         fflush(((fim_tmp_file *) arg)->fd);
 
-    } else { // memory storage enabled
-        W_Vector_insert(((fim_tmp_file *) arg)->list, base);
-    }
+//     } else { // memory storage enabled
+//         W_Vector_insert(((fim_tmp_file *) arg)->list, base);
+//     }
 
-    ((fim_tmp_file *) arg)->elements++;
+//     ((fim_tmp_file *) arg)->elements++;
 
-end:
-    os_free(base);
+// end:
+//     os_free(base);
 }
 
 void fim_db_callback_sync_path_range(__attribute__((unused))fdb_t *fim_sql, fim_entry *entry,
     __attribute__((unused))pthread_mutex_t *mutex, __attribute__((unused))void *alert,
     __attribute__((unused))void *mode, __attribute__((unused))void *w_event) {
 
-    cJSON * file_data = fim_entry_json(entry->file_entry.path, entry->file_entry.data);
-    char * plain = dbsync_state_msg("syscheck", file_data);
-    mdebug1("Sync Message for %s sent: %s", entry->file_entry.path, plain);
-    fim_send_sync_msg(plain);
-    os_free(plain);
+    // cJSON * file_data = fim_entry_json(entry->file_entry.path, entry->file_entry.data);
+    // char * plain = dbsync_state_msg("syscheck", file_data);
+    // mdebug1("Sync Message for %s sent: %s", entry->file_entry.path, plain);
+    // fim_send_sync_msg(plain);
+    // os_free(plain);
 }
 
 int fim_db_get_count_file_data(fdb_t * fim_sql) {
@@ -1433,7 +1434,7 @@ int fim_db_get_count(fdb_t *fim_sql, int index) {
     return FIMDB_ERR;
 }
 
-#ifdef WIN32
+// #ifdef WIN32
 
 fim_entry *fim_db_decode_full_reg_row(sqlite3_stmt *stmt) {
     fim_entry *registry_entry = NULL;
@@ -1641,4 +1642,4 @@ static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *re
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 9, registry_key->path, -1, NULL);
 }
 
-#endif
+// #endif
