@@ -196,20 +196,14 @@ typedef struct whodata {
 
 #endif /* End WIN32*/
 
-#ifdef WIN32
-
 typedef struct registry {
     char *entry;
     int arch;
+    int opts;
+    int recursion_level;
+    int diff_size_limit;
     char *tag;
 } registry;
-
-typedef struct registry_regex {
-    OSMatch *regex;
-    int arch;
-} registry_regex;
-
-#endif
 
 typedef struct fim_file_data {
     // Checksum attributes
@@ -247,23 +241,20 @@ typedef struct fim_registry_value_data {
     time_t last_event;
     unsigned int scanned;
 
-    // Options
-    // int options;
     //type:size:hash_sh1:mtime
     os_sha1 checksum;
     fim_event_mode mode;
 } fim_registry_value_data;
 
-typedef struct fim_registry_value_key {
+typedef struct fim_registry_key {
     char * path;
+    unsigned int id;
     char * perm;
     char * uid;
     char * gid;
     char * user_name;
     char * group_name;
 
-    // Options
-    int options;
     unsigned int scanned;
     // path:perm:uid:user_name:gid:group_name
     os_sha1 checksum;
@@ -302,85 +293,6 @@ typedef struct fdb_t
     sqlite3_stmt *stmt[FIMDB_STMT_SIZE];
     fdb_transaction_t transaction;
 } fdb_t;
-
-// typedef struct _config {
-//     int rootcheck;                  /* set to 0 when rootcheck is disabled */
-//     int disabled;                   /* is syscheck disabled? */
-//     int scan_on_start;
-//     int max_depth;                  /* max level of recursivity allowed */
-//     size_t file_max_size;           /* max file size for calculating hashes */
-
-//     fs_set skip_fs;
-//     int rt_delay;                   /* Delay before real-time dispatching (ms) */
-
-//     int time;                       /* frequency (secs) for syscheck to run */
-//     int queue;                      /* file descriptor of socket to write to queue */
-//     unsigned int restart_audit:1;   /* Allow Syscheck restart Auditd */
-//     unsigned int enable_whodata:1;  /* At least one directory configured with whodata */
-//     unsigned int enable_synchronization:1;    /* Enable database synchronization */
-
-//     int *opts;                      /* attributes set in the <directories> tag element */
-
-//     char *scan_day;                 /* run syscheck on this day */
-//     char *scan_time;                /* run syscheck at this time */
-
-//     unsigned int file_limit;        /* maximum number of files to monitor */
-//     unsigned int file_limit_enabled;    /* Enable file_limit option */
-
-//     char **ignore;                  /* list of files/dirs to ignore */
-//     OSMatch **ignore_regex;         /* regex of files/dirs to ignore */
-
-//     int disk_quota_enabled;         /* Enable diff disk quota limit */
-//     int disk_quota_limit;           /* Controls the increase of the size of the queue/diff/local folder (in KB) */
-//     int file_size_enabled;          /* Enable diff file size limit */
-//     int file_size_limit;            /* Avoids generating a backup from a file bigger than this limit (in KB) */
-//     int *diff_size_limit;           /* Apply the file size limit option in a specific directory */
-//     float diff_folder_size;         /* Save size of queue/diff/local folder */
-//     float comp_estimation_perc;     /* Estimation of the percentage of compression each file will have */
-//     uint16_t disk_quota_full_msg;   /* Specify if the full disk_quota message can be written (Once per scan) */
-
-//     char **nodiff;                  /* list of files/dirs to never output diff */
-//     OSMatch **nodiff_regex;         /* regex of files/dirs to never output diff */
-
-//     char **dir;                     /* array of directories to be scanned */
-//     char **symbolic_links;         /* array of converted links directories */
-//     OSMatch **filerestrict;
-//     int *recursion_level;
-
-//     char **tag;                     /* array of tags for each directory */
-//     long max_sync_interval;         /* Maximum Synchronization interval (seconds) */
-//     long sync_interval;             /* Synchronization interval (seconds) */
-//     long sync_response_timeout;     /* Minimum time between receiving a sync response and starting a new sync session */
-//     long sync_queue_size;           /* Data synchronization message queue size */
-//     long sync_max_eps;              /* Maximum events per second for synchronization messages. */
-//     unsigned max_eps;               /* Maximum events per second. */
-
-//     /* Windows only registry checking */
-// #ifdef WIN32
-//     char realtime_change;                       // Variable to activate the change to realtime from a whodata monitoring
-//     registry *registry_ignore;                  /* list of registry entries to ignore */
-//     registry_regex *registry_ignore_regex;      /* regex of registry entries to ignore */
-//     registry *registry;                         /* array of registry entries to be scanned */
-//     int max_fd_win_rt;
-//     whodata wdata;
-// #endif
-//     int max_audit_entries;          /* Maximum entries for Audit (whodata) */
-//     char **audit_key;               // Listen audit keys
-//     int audit_healthcheck;          // Startup health-check for whodata
-//     int sym_checker_interval;
-
-//     pthread_mutex_t fim_entry_mutex;
-//     pthread_mutex_t fim_scan_mutex;
-//     pthread_mutex_t fim_realtime_mutex;
-
-//     rtfim *realtime;
-//     fdb_t *database;
-//     int database_store;
-
-//     char *prefilter_cmd;
-//     int process_priority; // Adjusts the priority of the process (or threads in Windows)
-//     bool allow_remote_prefilter_cmd;
-// } syscheck_config;
 
 /**
  * @brief Organizes syscheck directories and related data according to their priority (whodata-realtime-scheduled) and in alphabetical order
@@ -456,5 +368,10 @@ char *check_ascci_hex(char *input);
  *
  */
 void log_realtime_status(int);
+
+void free_entry_data(fim_file_data * data);
+void free_registry_key(fim_registry_key *key);
+void free_registry_value(fim_registry_value_data *data);
+void free_entry(fim_entry * entry);
 
 #endif /* SYSCHECKC_H */

@@ -7,7 +7,7 @@
  */
 
 
-#include "dependencies.h"
+#include "syscheck-config.h"
 
 #define FIM_DB_MEMORY_PATH  ":memory:"
 

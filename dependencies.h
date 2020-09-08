@@ -97,120 +97,35 @@ typedef struct fim_tmp_file {
     int elements;
 } fim_tmp_file;
 
-typedef enum fim_type {FIM_TYPE_FILE, FIM_TYPE_REGISTRY} fim_type;
-
 typedef struct whodata_evt {
     char *user_id;
     char *user_name;
     char *process_name;
     char *path;
-#ifndef WIN32
-    char *group_id;  // Linux
-    char *group_name;  // Linux
-    char *audit_uid;  // Linux
-    char *audit_name;  // Linux
-    char *effective_uid;  // Linux
-    char *effective_name;  // Linux
-    char *inode;  // Linux
-    char *dev;  // Linux
-    char *parent_name; // Linux
-    char *parent_cwd;
-    int ppid;  // Linux
-    char *cwd; // Linux
+
+    unsigned __int64;
     unsigned int process_id;
-#else
-    unsigned __int64 process_id;
     unsigned int mask;
     char scan_directory;
     int config_node;
-#endif
+
 } whodata_evt;
 
-#ifdef WIN32
 
 typedef struct whodata_dir_status {
     int status;
     char object_type;
-    SYSTEMTIME last_check;
 } whodata_dir_status;
 
-typedef ULARGE_INTEGER whodata_directory;
+typedef unsigned int whodata_directory;
 
 typedef struct whodata {
-    OSHash *fd;                         // Open file descriptors
-    OSHash *directories;                // Directories checked by whodata mode
+
     int interval_scan;                  // Time interval between scans of the checking thread
     whodata_dir_status *dirs_status;    // Status list
     char **device;                       // Hard disk devices
     char **drive;                        // Drive letter
 } whodata;
-
-#endif /* End WIN32*/
-
-#ifdef WIN32
-
-typedef struct registry {
-    char *entry;
-    int arch;
-    char *tag;
-} registry;
-
-typedef struct registry_regex {
-    OSMatch *regex;
-    int arch;
-} registry_regex;
-
-#endif
-
-typedef struct fim_registry_key {
-    char * path;
-    unsigned int id;
-    char * perm;
-    char * uid;
-    char * gid;
-    char * user_name;
-    char * group_name;
-
-    // Options
-    int options;
-    unsigned int scanned;
-    // path:perm:uid:user_name:gid:group_name
-    os_sha1 checksum;
-} fim_registry_key;
-
-typedef struct fim_entry {
-    fim_type type;
-    union {
-        struct {
-            char *path;
-            fim_file_data *data;
-        } file_entry;
-        struct {
-            fim_registry_key *key;
-            fim_registry_value_data *value;
-        } registry_entry;
-    };
-
-} fim_entry;
-
-
-typedef struct fim_inode_data {
-    int items;
-    char ** paths;
-} fim_inode_data;
-
-typedef struct fdb_transaction_t
-{
-    time_t last_commit;
-    time_t interval;
-} fdb_transaction_t;
-
-typedef struct fdb_t
-{
-    sqlite3 *db;
-    sqlite3_stmt *stmt[FIMDB_STMT_SIZE];
-    fdb_transaction_t transaction;
-} fdb_t;
 
 typedef enum dbsync_msg {
     INTEGRITY_CHECK_LEFT,       ///< Splitted chunk: left part.
@@ -239,9 +154,7 @@ gid_t Privsep_GetGroup(const char *name) __attribute__((nonnull));
 #define os_strdup(x,y) ((y = strdup(x)))?(void)1:exit(1)
 #define w_strdup(x,y) ({ int retstr = 0; if (x) { os_strdup(x, y);} else retstr = 1; retstr;})
 #define os_free(x) if(x){free(x);x=NULL;}
-void free_entry_data(fim_file_data * data);
-void free_registry_key(fim_registry_key *key);
-void free_registry_value(fim_registry_value_data *data);
+
 #define wdb_finalize(x) { if (x) { sqlite3_finalize(x); x = NULL; } }
 #define w_rwlock_init(x, y) { int error = pthread_rwlock_init(x, y); if (error) exit(1); }
 #define w_rwlock_rdlock(x) { int error = pthread_rwlock_rdlock(x); if (error) exit(1); }
@@ -254,7 +167,6 @@ void gettime(struct timespec *ts);
 double time_diff(const struct timespec * a, const struct timespec * b);
 int file_sha256(int fd, char sum[SHA256_LEN]);
 #define w_FreeArray(x) if (x) {char **x_it = x; for (; *x_it; (x_it)++) {os_free(*x_it);}}
-void free_entry(fim_entry * entry);
 #define os_realloc(x,y,z) ((z = (__typeof__(z))realloc(x,y)))?(void)1:merror("memory")
 
 #define sqlite_strdup(x,y) ({ if (x) { os_strdup(x, y); } else (void)0; })
