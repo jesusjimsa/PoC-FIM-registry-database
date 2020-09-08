@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     nice(10);
 
     // bool type = false;
-    unsigned int num = atoi(argv[2]);
+    unsigned int num = atoi(argv[1]);
     // int loop = atoi(argv[3]);
     // char * file_test = argv[4];
 
