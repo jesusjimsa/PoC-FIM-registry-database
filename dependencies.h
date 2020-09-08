@@ -21,69 +21,6 @@
 #define SHA256_LEN 65
 #define PATH_MAX 1024
 
-typedef enum fim_event_mode {
-    FIM_SCHEDULED,
-    FIM_REALTIME,
-    FIM_WHODATA
-} fim_event_mode;
-
-typedef enum fdb_stmt {
-    // Files
-    FIMDB_STMT_INSERT_DATA,
-    FIMDB_STMT_REPLACE_PATH,
-    FIMDB_STMT_GET_PATH,
-    FIMDB_STMT_UPDATE_DATA,
-    FIMDB_STMT_UPDATE_PATH,
-    FIMDB_STMT_GET_LAST_PATH,
-    FIMDB_STMT_GET_FIRST_PATH,
-    FIMDB_STMT_GET_ALL_ENTRIES,
-    FIMDB_STMT_GET_NOT_SCANNED,
-    FIMDB_STMT_SET_ALL_UNSCANNED,
-    FIMDB_STMT_GET_PATH_COUNT,
-    FIMDB_STMT_GET_DATA_ROW,
-    FIMDB_STMT_GET_COUNT_RANGE,
-    FIMDB_STMT_GET_PATH_RANGE,
-    FIMDB_STMT_DELETE_PATH,
-    FIMDB_STMT_DELETE_DATA,
-    FIMDB_STMT_GET_PATHS_INODE,
-    FIMDB_STMT_GET_PATHS_INODE_COUNT,
-    FIMDB_STMT_SET_SCANNED,
-    FIMDB_STMT_GET_INODE_ID,
-    FIMDB_STMT_GET_COUNT_PATH,
-    FIMDB_STMT_GET_COUNT_DATA,
-    FIMDB_STMT_GET_INODE,
-    // Registries
-    FIMDB_STMT_REPLACE_REG_DATA,
-    FIMDB_STMT_REPLACE_REG_KEY,
-    FIMDB_STMT_GET_REG_KEY,
-    FIMDB_STMT_GET_REG_DATA,
-    FIMDB_STMT_UPDATE_REG_DATA,
-    FIMDB_STMT_UPDATE_REG_KEY,
-    FIMDB_STMT_GET_ALL_REG_ENTRIES,
-    FIMDB_STMT_GET_REG_KEY_NOT_SCANNED,
-    FIMDB_STMT_GET_REG_DATA_NOT_SCANNED,
-    FIMDB_STMT_SET_ALL_REG_KEY_UNSCANNED,
-    FIMDB_STMT_SET_REG_KEY_UNSCANNED,
-    FIMDB_STMT_SET_ALL_REG_DATA_UNSCANNED,
-    FIMDB_STMT_SET_REG_DATA_UNSCANNED,
-    FIMDB_STMT_GET_REG_DATA_ID,
-    FIMDB_STMT_DELETE_REG_KEY_PATH,
-    FIMDB_STMT_DELETE_REG_DATA,
-    FIMDB_STMT_DELETE_REG_DATA_PATH,
-    FIMDB_STMT_GET_COUNT_REG_KEY,
-    FIMDB_STMT_GET_COUNT_REG_DATA,
-    FIMDB_STMT_GET_COUNT_REG_KEY_AND_DATA,
-    FIMDB_STMT_GET_LAST_REG_KEY,
-    FIMDB_STMT_GET_FIRST_REG_KEY,
-    FIMDB_STMT_GET_REG_COUNT_RANGE,
-    FIMDB_STMT_GET_REG_PATH_RANGE,
-    FIMDB_STMT_SET_REG_KEY_SCANNED,
-    FIMDB_STMT_SET_REG_DATA_SCANNED,
-    FIMDB_STMT_SIZE
-} fdb_stmt;
-
-#define FIM_MODE(x) (x & WHODATA_ACTIVE ? FIM_WHODATA : x & REALTIME_ACTIVE ? FIM_REALTIME : FIM_SCHEDULED)
-
 #if defined(WIN32) && defined(EVENTCHANNEL_SUPPORT)
 #define WIN_WHODATA 1
 #endif
@@ -224,49 +161,6 @@ typedef struct registry_regex {
 } registry_regex;
 
 #endif
-
-typedef struct fim_file_data {
-    // Checksum attributes
-    unsigned int size;
-    char * perm;
-    char * attributes;
-    char * uid;
-    char * gid;
-    char * user_name;
-    char * group_name;
-    unsigned int mtime;
-    unsigned long int inode;
-    os_md5 hash_md5;
-    os_sha1 hash_sha1;
-    os_sha256 hash_sha256;
-
-    // Options
-    fim_event_mode mode;
-    time_t last_event;
-    unsigned long int dev;
-    unsigned int scanned;
-    int options;
-    os_sha1 checksum;
-} fim_file_data;
-
-typedef struct fim_registry_value_data {
-    char * name;
-    unsigned int type;
-    // char * data;
-    unsigned int size;
-    os_md5 hash_md5;
-    os_sha1 hash_sha1;
-    os_sha256 hash_sha256;
-    unsigned int mtime;
-    time_t last_event;
-    unsigned int scanned;
-
-    // Options
-    // int options;
-    //type:size:hash_sh1:mtime
-    os_sha1 checksum;
-    fim_event_mode mode;
-} fim_registry_value_data;
 
 typedef struct fim_registry_key {
     char * path;
