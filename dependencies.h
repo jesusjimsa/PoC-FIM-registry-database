@@ -17,6 +17,7 @@
 #include "error_messages/warning_messages.h"
 #include "error_messages/debug_messages.h"
 #include "error_messages/error_messages.h"
+#include "syscheck-config.h"
 
 #define debug_level 0
 #define max_size 20000
@@ -84,10 +85,6 @@
 #ifdef WIN32
 typedef struct whodata_dir_status whodata_dir_status;
 #endif
-
-typedef char os_md5[33];
-typedef char os_sha1[65];
-typedef char os_sha256[65];
 
 typedef struct fim_tmp_file {
     union { //type_storage

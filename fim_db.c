@@ -43,11 +43,11 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_INODE] = "SELECT inode FROM file_data where rowid=(SELECT inode_id FROM file_entry WHERE path = ?)",
 // #ifdef WIN32
     [FIMDB_STMT_REPLACE_REG_DATA] = "INSERT OR REPLACE INTO registry_data (key_id, name, type, scanned, checksum, last_event, options) VALUES (?, ?, ?, ?, ?, ?, ?);",
-    [FIMDB_STMT_REPLACE_REG_KEY] = "INSERT OR REPLACE INTO registry_key (path, data_id, perm, uid, gid, user_name, group_name, scanned, options, checksum) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+    [FIMDB_STMT_REPLACE_REG_KEY] = "INSERT OR REPLACE INTO registry_key (path, data_id, perm, uid, gid, user_name, group_name, scanned, checksum) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
     [FIMDB_STMT_GET_REG_KEY] = "SELECT path, data_id, perm, uid, gid, user_name, group_name, scanned, options FROM registry_key WHERE path = ?;",
     [FIMDB_STMT_GET_REG_DATA] = "SELECT key_id, name, type, scanned, checksum, last_event, options FROM registry_data WHERE name = ? AND key_id = ?;",
     [FIMDB_STMT_UPDATE_REG_DATA] = "UPDATE registry_data SET type = ?, scanned = ?, checksum = ?, last_event = ?, options = ? WHERE key_id = ? AND name = ?;",
-    [FIMDB_STMT_UPDATE_REG_KEY] = "UPDATE registry_key SET perm = ?, uid = ?, gid = ?, user_name = ?, group_name = ?, scanned = ?, options = ?, checksum = ? WHERE path = ?;",
+    [FIMDB_STMT_UPDATE_REG_KEY] = "UPDATE registry_key SET perm = ?, uid = ?, gid = ?, user_name = ?, group_name = ?, scanned = ?, checksum = ? WHERE path = ?;",
     [FIMDB_STMT_GET_ALL_REG_ENTRIES] = "SELECT path, data_id, perm, uid, gid, user_name, group_name, registry_key.scanned, registry_key.options, key_id, name, type, registry_data.scanned, checksum, last_event, registry_data.options FROM registry_data INNER JOIN registry_key ON data_id = registry_data.key_id ORDER BY PATH ASC;",
     [FIMDB_STMT_GET_REG_KEY_NOT_SCANNED] = "SELECT path, data_id, perm, uid, gid, user_name, group_name, scanned, options FROM registry_key WHERE scanned = 0;",
     [FIMDB_STMT_GET_REG_DATA_NOT_SCANNED] = "SELECT key_id, name, type, scanned, checksum, last_event, options FROM registry_data WHERE scanned = 0;",
@@ -1575,12 +1575,12 @@ int fim_db_insert_registry_key(fdb_t *fim_sql, fim_registry_key *entry, int data
     return FIMDB_OK;
 }
 
-int fim_db_insert_registry(fdb_t *fim_sql, int key_id, fim_entry *new) {
+int fim_db_insert_registry(fdb_t *fim_sql, fim_entry *new) {
     int res_data = 0;
     int res_key = 0;
 
-    res_data = fim_db_insert_registry_data(fim_sql, new->registry_entry.value, key_id);
-    res_key = fim_db_insert_registry_key(fim_sql, new->registry_entry.key, key_id);
+    res_data = fim_db_insert_registry_data(fim_sql, new->registry_entry.value, new->registry_entry.key->id);
+    res_key = fim_db_insert_registry_key(fim_sql, new->registry_entry.key, new->registry_entry.key->id);
 
     return res_data || res_key;
 }
@@ -1605,8 +1605,7 @@ static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *re
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 6, registry_key->user_name, -1, NULL);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 7, registry_key->group_name, -1, NULL);
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 8, registry_key->scanned);
-    sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 9, registry_key->options);
-    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 10, registry_key->checksum, -1, NULL);
+    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 9, registry_key->checksum, -1, NULL);
 }
 
 static void fim_db_bind_registry_key_path(fdb_t *fim_sql, int index, const char *key_path) {
@@ -1637,9 +1636,8 @@ static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *re
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 4, registry_key->user_name, -1, NULL);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 5, registry_key->group_name, -1, NULL);
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 6, registry_key->scanned);
-    sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 7, registry_key->options);
-    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 8, registry_key->checksum, -1, NULL);
-    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 9, registry_key->path, -1, NULL);
+    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 7, registry_key->checksum, -1, NULL);
+    sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 8, registry_key->path, -1, NULL);
 }
 
 // #endif

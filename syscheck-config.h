@@ -19,6 +19,10 @@ typedef enum fim_event_mode {
     FIM_WHODATA
 } fim_event_mode;
 
+typedef char os_md5[33];
+typedef char os_sha1[65];
+typedef char os_sha256[65];
+
 typedef enum fdb_stmt {
     // Files
     FIMDB_STMT_INSERT_DATA,

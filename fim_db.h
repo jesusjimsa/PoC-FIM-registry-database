@@ -382,7 +382,7 @@ int fim_db_get_count_file_entry(fdb_t * fim_sql);
 */
 int fim_db_get_count(fdb_t *fim_sql, int index);
 
-#ifdef WIN32
+// #ifdef WIN32
 
 // Registry callbacks
 
@@ -480,7 +480,7 @@ int fim_db_insert_registry_key(fdb_t *fim_sql, fim_registry_key *entry, int data
  *
  * @return FIMDB_OK on success, FIMDB_ERR otherwise.
  */
-int fim_db_insert_registry(fdb_t *fim_sql, int key_id, fim_entry *new);
+int fim_db_insert_registry(fdb_t *fim_sql, fim_entry *new);
 
 /**
  * @brief Calculate checksum of registry keys between @start and @top.
@@ -749,4 +749,4 @@ int fim_db_get_count_registry_entry(fdb_t *fim_sql);
  */
 int fim_db_get_count_registry_data(fdb_t * fim_sql);
 
-#endif
+// #endif
