@@ -160,7 +160,7 @@ typedef struct fim_tmp_file {
     int elements;
 } fim_tmp_file;
 
-typedef enum fim_type {FIM_TYPE_FILE = 0, FIM_TYPE_REGISTRY} fim_type;
+typedef enum fim_type {FIM_TYPE_FILE, FIM_TYPE_REGISTRY} fim_type;
 
 typedef struct whodata_evt {
     char *user_id;
@@ -268,8 +268,9 @@ typedef struct fim_registry_value_data {
     fim_event_mode mode;
 } fim_registry_value_data;
 
-typedef struct fim_registry_value_key {
+typedef struct fim_registry_key {
     char * path;
+    unsigned int id;
     char * perm;
     char * uid;
     char * gid;
@@ -345,6 +346,8 @@ gid_t Privsep_GetGroup(const char *name) __attribute__((nonnull));
 #define w_strdup(x,y) ({ int retstr = 0; if (x) { os_strdup(x, y);} else retstr = 1; retstr;})
 #define os_free(x) if(x){free(x);x=NULL;}
 void free_entry_data(fim_file_data * data);
+void free_registry_key(fim_registry_key *key);
+void free_registry_value(fim_registry_value_data *data);
 #define wdb_finalize(x) { if (x) { sqlite3_finalize(x); x = NULL; } }
 #define w_rwlock_init(x, y) { int error = pthread_rwlock_init(x, y); if (error) exit(1); }
 #define w_rwlock_rdlock(x) { int error = pthread_rwlock_rdlock(x); if (error) exit(1); }

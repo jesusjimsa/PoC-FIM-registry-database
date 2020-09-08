@@ -237,13 +237,54 @@ void free_entry_data(fim_file_data * data) {
     os_free(data);
 }
 
+void free_registry_key(fim_registry_key *key) {
+    if (!key) {
+        return;
+    }
+
+    if (key->path) {
+        os_free(key->path);
+    }
+
+    if (key->perm) {
+        os_free(key->perm);
+    }
+
+    if (key->uid) {
+        os_free(key->uid);
+    }
+
+    if (key->gid) {
+        os_free(key->gid);
+    }
+
+    if (key->user_name) {
+        os_free(key->user_name);
+    }
+
+    if (key->group_name) {
+        os_free(key->group_name);
+    }
+}
+
+void free_registry_value(fim_registry_value_data *data) {
+    if (!data) {
+        return;
+    }
+
+    if (data->name) {
+        os_free(data->name);
+    }
+}
+
 void free_entry(fim_entry * entry) {
     if (entry) {
         free(entry->file_entry.path);
         free_entry_data(entry->file_entry.data);
+        free_registry_key(entry->registry_entry.key);
+        free_registry_value(entry->registry_entry.value);
         free(entry);
     }
-
 }
 
 void gettime(struct timespec *ts) {
