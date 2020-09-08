@@ -177,10 +177,10 @@ int main(int argc, char *argv[]) {
 
     fdb_t *fim_sql = fim_db_init(FIM_DB_DISK);
 
-    // if (fim_db_init(type) == FIMDB_ERR) {
-    //     merror("Could not init the database.");
-    //     return 1;
-    // }
+    if (fim_sql == NULL) {
+        merror("Could not init the database.");
+        return 1;
+    }
 
     gettime(&end);
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
