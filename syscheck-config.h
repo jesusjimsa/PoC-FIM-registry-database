@@ -75,6 +75,7 @@ typedef enum fdb_stmt {
     FIMDB_STMT_GET_REG_PATH_RANGE,
     FIMDB_STMT_SET_REG_KEY_SCANNED,
     FIMDB_STMT_SET_REG_DATA_SCANNED,
+    FIMDB_STMT_GET_REG_KEY_ROWID,
     FIMDB_STMT_SIZE
 } fdb_stmt;
 
@@ -210,6 +211,7 @@ typedef struct fim_registry_key {
     char * gid;
     char * user_name;
     char * group_name;
+    int arch;
 
     unsigned int scanned;
     // path:perm:uid:user_name:gid:group_name
