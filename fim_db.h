@@ -15,7 +15,7 @@
 
 #ifndef WIN32
 #define FIM_DB_DISK_PATH    DEFAULTDIR "/fim.db"
-#define FIM_DB_TMPDIR       DEFAULTDIR "/tmp/"
+#define FIM_DB_TMPDIR       DEFAULTDIR "/"
 #else
 #define FIM_DB_DISK_PATH    "queue/fim/db/fim.db"
 #define FIM_DB_TMPDIR       "tmp/"
@@ -709,7 +709,7 @@ int fim_db_process_missing_registry_data_entry(fdb_t *fim_sql, fim_tmp_file *fil
  * @param fim_sql FIM database struct.
  * @return Number of entries in registry key table.
  */
-int fim_db_get_count_registry_entry(fdb_t *fim_sql);
+int fim_db_get_count_registry_key(fdb_t *fim_sql);
 
 /**
  * @brief Get count of all entries in registry data table.
@@ -731,3 +731,12 @@ int fim_db_get_count_registry_data(fdb_t * fim_sql);
 fim_registry_value_data *fim_db_get_registry_data(fdb_t *fim_sql, const int key_id, const char *name);
 
 // #endif
+/**
+ * @brief Get the rowid of a key path.
+ * @param fim_sql FIM database struct
+ * @param path Path of the key to look for
+ * @param rowid Variable where the rowid will be stored
+ *
+ * @return FIMDB_OK on success, FIMDB_ERR otherwise.
+ */
+int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid);
