@@ -279,11 +279,14 @@ void free_registry_value(fim_registry_value_data *data) {
 
 void free_entry(fim_entry * entry) {
     if (entry) {
-        free(entry->file_entry.path);
-        free_entry_data(entry->file_entry.data);
-        free_registry_key(entry->registry_entry.key);
-        free_registry_value(entry->registry_entry.value);
-        free(entry);
+        if (entry->type == FIM_TYPE_FILE) {
+            free(entry->file_entry.path);
+            free_entry_data(entry->file_entry.data);
+        } else {
+            free_registry_key(entry->registry_entry.key);
+            free_registry_value(entry->registry_entry.value);
+        }
+    free(entry);
     }
 }
 

@@ -12,4 +12,4 @@ $(SCHEMA): schema_fim_db.sql
 	@echo 'const char *schema_fim_sql = "'"`cat $< | tr -d \"\n\"`"'";' | gcc -xc -c -o $@ -
 
 clean:
-	@rm -f ./*.o $(EXEC)
+	@rm -f ./*.o $(EXEC) fim.db fim.db-*

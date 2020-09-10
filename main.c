@@ -41,7 +41,7 @@ static fim_registry_value_data *fill_registry_value_struct(char * name, unsigned
     snprintf(data->hash_sha1, 65, "%s", hash_sha1);
     // data->hash_sha256 = hash_sha256;
     snprintf(data->hash_sha256, 65, "%s", hash_sha256);
-    data->mtime = mtime;
+
     data->last_event = last_event;
     data->scanned = scanned;
     // data->checksum = checksum;
@@ -95,7 +95,6 @@ void print_fim_registry_value_data(fim_entry *entry) {
     printf("Hash MD5: %s\n", entry->registry_entry.value->hash_md5);
     printf("Hash SHA1: %s\n", entry->registry_entry.value->hash_sha1);
     printf("Hash SHA256: %s\n", entry->registry_entry.value->hash_sha256);
-    printf("Mtime: %d\n", entry->registry_entry.value->mtime);
     printf("Last event: %lu\n", entry->registry_entry.value->last_event);
     printf("Scanned: %d\n", entry->registry_entry.value->scanned);
     printf("Checksum: %s\n", entry->registry_entry.value->checksum);

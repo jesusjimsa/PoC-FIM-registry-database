@@ -186,7 +186,6 @@ typedef struct fim_file_data {
     os_sha1 checksum;
 } fim_file_data;
 
-
 typedef struct fim_registry_key {
     unsigned int id;
     char * path;
