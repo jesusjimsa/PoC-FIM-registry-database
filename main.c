@@ -102,9 +102,6 @@ void print_fim_registry_value_data(fim_entry *entry) {
     printf("---------------------------------\n");
 }
 
-/**
- * TODO: Change this function to fill registries instead of files
- */
 #define DEF_REG_NAME "reg_name_"
 #define DEF_REG_PATH "HKEY_LOCAL_MACHINE\\TEST\\"
 int fill_entries_random(fdb_t *fim_sql, unsigned int num_entries) {
@@ -125,7 +122,7 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_entries) {
                                                                    "53bf474924c7876e2272db4a62fc64c8e2c18b51",
                                                                    FIM_SCHEDULED);
 
-        fim_registry_key *key = fill_registry_key_struct(reg_path, i, "rwxrwxrwx", "0", "0", "root", "root", 1,
+        fim_registry_key *key = fill_registry_key_struct(reg_path, 0, "rwxrwxrwx", "0", "0", "root", "root", 1,
                                                          "53bf474924c7876e2272db4a62fc64c8e2c18b51");
 
         fim_entry *entry = calloc(1, sizeof(fim_entry));
