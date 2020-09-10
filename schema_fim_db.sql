@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS registry_key (
     gid INTEGER,
     user_name TEXT,
     group_name TEXT,
+    mtime INTEGER,
     scanned INTEGER,
     checksum TEXT NOT NULL,
     arch INTEGER,
@@ -58,13 +59,15 @@ CREATE TABLE IF NOT EXISTS registry_data (
     key_id INTEGER,
     name TEXT,
     type INTEGER,
+    size INTEGER,
     hash_md5 TEXT,
     hash_sha1 TEXT,
     hash_sha256 TEXT,
     scanned INTEGER,
-    checksum TEXT NOT NULL,
     last_event INTEGER,
-    PRIMARY KEY(key_id, name),
+    checksum TEXT NOT NULL,
+
+    PRIMARY KEY(key_id, name)
     FOREIGN KEY (key_id) REFERENCES registry_key(rowid)
 );
 
