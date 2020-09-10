@@ -189,4 +189,6 @@ int main(int argc, char *argv[]) {
 
     gettime(&end);
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+    
+    fim_db_force_commit(fim_sql);
 }
