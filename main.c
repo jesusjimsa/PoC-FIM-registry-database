@@ -193,9 +193,10 @@ int main(int argc, char *argv[]) {
     printf("Number of registries %d\n", fim_db_get_count_registry_key(fim_sql));
     printf("Number of registries %d\n", fim_db_get_count_registry_data(fim_sql));
 
-    fim_tmp_file * file;
-    fim_db_set_all_registry_key_unscanned(fim_sql);
+    fim_tmp_file * file, *file2;
     fim_db_get_registry_keys_not_scanned(fim_sql, &file, FIM_DB_DISK);
-    fim_db_force_commit(fim_sql);
 
+    fim_db_get_registry_data_not_scanned(fim_sql, &file2, FIM_DB_DISK);
+
+    fim_db_force_commit(fim_sql);
 }
