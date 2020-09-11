@@ -286,7 +286,7 @@ static int fim_db_process_get_registry_query(fdb_t *fim_sql, int index,void (*ca
  * @param name Registry name.
  * @param key_id Key id of the registry.
 */
-static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, int index, char *name, int key_id);
+static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, const int index, const char *name, const int key_id);
 
 
 /**
@@ -296,7 +296,7 @@ static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, int index, cha
  * @param index Index of the particular statement.
  * @param path Path to registry.
 */
-static void fim_db_bind_registry_path(fdb_t *fim_sql, int index, const char *path);
+static void fim_db_bind_registry_path(fdb_t *fim_sql, const int index, const char *path);
 
 
 /**
@@ -307,7 +307,7 @@ static void fim_db_bind_registry_path(fdb_t *fim_sql, int index, const char *pat
  * @param start First entry of the range.
  * @param top Last entry of the range.
 */
-static void fim_db_bind_registry_path_range(fdb_t *fim_sql, int index, char *start, char *top);
+static void fim_db_bind_registry_path_range(fdb_t *fim_sql, const int index, const char *start, const char *top);
 
 /**
  * @brief Bind registry data into an insert registry data statement
@@ -316,7 +316,7 @@ static void fim_db_bind_registry_path_range(fdb_t *fim_sql, int index, char *sta
  * @param data Structure that contains the fields of the inserted data.
  * @param key_id Identifier of the key.
  */
-static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, unsigned int key_id);
+static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, const unsigned int key_id);
 
 /**
  * @brief Bind registry data into an insert registry key statement
@@ -325,16 +325,7 @@ static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_
  * @param registry_key Structure that contains the fields of the inserted key.
  * @param rowid Row identifier.
  */
-static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *registry_key, unsigned int rowid);
-
-/**
- * @brief Bind registry key path into a statement
- *
- * @param fim_sql FIM database structure.
- * @param index Index of the statement.
- * @param key_path path of the key.
- */
-// static void fim_db_bind_registry_key_path(fdb_t *fim_sql, int index, const char *key_path);
+static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *registry_key, const unsigned int rowid);
 
 /**
  * @brief Bind registry data into a update registry data statement
@@ -343,7 +334,7 @@ static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *re
  * @param data Registy data structure with that will be updated.
  * @param key_id Identifier of the registry key.
  */
-static void fim_db_bind_update_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, unsigned int key_id);
+static void fim_db_bind_update_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, const unsigned int key_id);
 
 /**
  * @brief Bind registry key into a update registry data statement
@@ -359,7 +350,7 @@ static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *re
  * @param fim_sql FIM database structure.
  * @param rowid Row id of the registry key.
  */
-static void fim_db_bind_get_registry_key_rowid(fdb_t *fim_sql, unsigned int rowid);
+static void fim_db_bind_get_registry_key_rowid(fdb_t *fim_sql, const unsigned int rowid);
 
 
 char * wstr_escape_json(const char * string) {
@@ -939,7 +930,7 @@ void fim_db_bind_range(fdb_t *fim_sql, int index, const char *start, const char 
 
 // #ifdef WIN32
 // Registry sql queries bindings
-static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, int index, char *name, int key_id) {
+static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, const int index, const char *name, const int key_id) {
     if (index == FIMDB_STMT_SET_REG_DATA_UNSCANNED ||
         index == FIMDB_STMT_DELETE_REG_DATA ||
         index == FIMDB_STMT_SET_REG_KEY_SCANNED ||
@@ -950,7 +941,7 @@ static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, int index, cha
     }
 }
 
-static void fim_db_bind_registry_path(fdb_t *fim_sql, int index, const char *path) {
+static void fim_db_bind_registry_path(fdb_t *fim_sql, const int index, const char *path) {
     if (index == FIMDB_STMT_GET_REG_KEY ||
         index == FIMDB_STMT_SET_REG_KEY_UNSCANNED ||
         index == FIMDB_STMT_GET_REG_ROWID ||
@@ -962,7 +953,7 @@ static void fim_db_bind_registry_path(fdb_t *fim_sql, int index, const char *pat
     }
 }
 
-static void fim_db_bind_registry_path_range(fdb_t *fim_sql, int index, char *start, char *top) {
+static void fim_db_bind_registry_path_range(fdb_t *fim_sql, const int index, const char *start, const char *top) {
     if (index == FIMDB_STMT_GET_REG_COUNT_RANGE ||
         index == FIMDB_STMT_GET_REG_PATH_RANGE) {
 
@@ -971,7 +962,7 @@ static void fim_db_bind_registry_path_range(fdb_t *fim_sql, int index, char *sta
     }
 }
 
-static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, unsigned int key_id) {
+static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, const unsigned int key_id) {
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_DATA], 1, key_id);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_DATA], 2, data->name, -1, NULL);
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_DATA], 3, data->type);
@@ -984,7 +975,7 @@ static void fim_db_bind_insert_registry_data(fdb_t *fim_sql, fim_registry_value_
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_DATA], 10, data->checksum, -1, NULL);
 }
 
-static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *registry_key, unsigned int rowid) {
+static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *registry_key, const unsigned int rowid) {
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 1, registry_key->path, -1, NULL);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 2, registry_key->perm, -1, NULL);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_REPLACE_REG_KEY], 3, registry_key->uid, -1, NULL);
@@ -1002,7 +993,7 @@ static void fim_db_bind_insert_registry_key(fdb_t *fim_sql, fim_registry_key *re
     }
 }
 
-static void fim_db_bind_update_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, unsigned int key_id) {
+static void fim_db_bind_update_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, const unsigned int key_id) {
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_DATA], 1, data->type);
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_DATA], 2, data->size);
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_DATA], 3, data->hash_md5, -1, NULL);
@@ -1028,7 +1019,7 @@ static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *re
     sqlite3_bind_text(fim_sql->stmt[FIMDB_STMT_UPDATE_REG_KEY], 10, registry_key->path, -1, NULL);
 }
 
-static void fim_db_bind_get_registry_key_rowid(fdb_t *fim_sql, unsigned int rowid) {
+static void fim_db_bind_get_registry_key_rowid(fdb_t *fim_sql, const unsigned int rowid) {
     sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY_ROWID], 1, rowid);
 }
 // #endif
@@ -1577,6 +1568,44 @@ int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid) 
     return FIMDB_OK;
 }
 
+fim_registry_key *fim_db_decode_registry_key_row(sqlite3_stmt *stmt) {
+    fim_registry_key *reg_key = NULL;
+
+    os_calloc(1, sizeof(fim_registry_key), reg_key);
+
+    sqlite_strdup(sqlite3_column_text(stmt, 0), reg_key->path);
+    sqlite_strdup(sqlite3_column_text(stmt, 1), reg_key->perm);
+    sqlite_strdup(sqlite3_column_text(stmt, 2), reg_key->uid);
+    sqlite_strdup(sqlite3_column_text(stmt, 3), reg_key->gid);
+    sqlite_strdup(sqlite3_column_text(stmt, 4), reg_key->user_name);
+    sqlite_strdup(sqlite3_column_text(stmt, 5), reg_key->group_name);
+    reg_key->mtime = (unsigned int)sqlite3_column_int(stmt, 6);
+    reg_key->scanned = (unsigned int)sqlite3_column_int(stmt, 7);
+    strncpy(reg_key->checksum, (char *)sqlite3_column_text(stmt, 8), sizeof(os_sha1) - 1);
+    reg_key->scanned = (unsigned int)sqlite3_column_int(stmt, 9);
+
+    return reg_key;
+}
+
+fim_registry_value_data *fim_db_decode_registry_data_row(sqlite3_stmt *stmt) {
+    fim_registry_value_data *value = NULL;
+
+    os_calloc(1, sizeof(fim_registry_value_data), value);
+
+    value->id = (unsigned int)sqlite3_column_int(stmt, 0);
+    sqlite_strdup(sqlite3_column_text(stmt, 1), value->name);
+    value->type = (unsigned int)sqlite3_column_int(stmt, 2);
+    value->size = (unsigned int)sqlite3_column_int(stmt, 3);
+    strncpy(value->hash_md5, (char *)sqlite3_column_text(stmt, 4), sizeof(os_md5) - 1);
+    strncpy(value->hash_sha1, (char *)sqlite3_column_text(stmt, 5), sizeof(os_sha1) - 1);
+    strncpy(value->hash_sha256, (char *)sqlite3_column_text(stmt, 6), sizeof(os_sha256) - 1);
+    value->scanned = (unsigned int)sqlite3_column_int(stmt, 7);
+    value->last_event = (unsigned int)sqlite3_column_int(stmt, 8);
+    strncpy(value->checksum, (char *)sqlite3_column_text(stmt, 9), sizeof(os_sha1) - 1);
+
+    return value;
+}
+
 fim_entry *fim_db_decode_full_reg_row(sqlite3_stmt *stmt) {
     fim_entry *entry = NULL;
 
@@ -1596,6 +1625,16 @@ fim_entry *fim_db_decode_full_reg_row(sqlite3_stmt *stmt) {
     entry->registry_entry.key->scanned = (unsigned int)sqlite3_column_int(stmt, 7);
     strncpy(entry->registry_entry.key->checksum, (char *)sqlite3_column_text(stmt, 8), sizeof(os_sha1) - 1);
     // Registry data
+    entry->registry_entry.value->id = (unsigned int)sqlite3_column_int(stmt, 9);
+    os_strdup((char *)sqlite3_column_text(stmt, 9), entry->registry_entry.value->name);
+    entry->registry_entry.value->type = (unsigned int)sqlite3_column_int(stmt, 10);
+    strncpy(entry->registry_entry.value->hash_md5, (char *)sqlite3_column_text(stmt, 11), sizeof(os_md5) - 1);
+    strncpy(entry->registry_entry.value->hash_sha1, (char *)sqlite3_column_text(stmt, 12), sizeof(os_sha1) - 1);
+    strncpy(entry->registry_entry.value->hash_sha256, (char *)sqlite3_column_text(stmt, 13), sizeof(os_sha256) - 1);
+    entry->registry_entry.value->scanned = (unsigned int)sqlite3_column_int(stmt, 14);
+    strncpy(entry->registry_entry.value->checksum, (char *)sqlite3_column_text(stmt, 15), sizeof(os_sha1) - 1);
+    entry->registry_entry.value->last_event = (time_t)sqlite3_column_int(stmt, 16);
+
     return entry;
 }
 
@@ -1709,9 +1748,31 @@ int fim_db_get_registry_data_not_scanned(fdb_t * fim_sql, fim_tmp_file **file, i
 
     return ret;
 }
-fim_registry_value_data *fim_db_get_registry_data(fdb_t *fim_sql, const int key_id, const char *name) {
-    fim_registry_value_data *data = NULL;
-    return data;
+
+fim_registry_value_data *fim_db_get_registry_data(fdb_t *fim_sql, const unsigned int key_id, const char *name) {
+    fim_registry_value_data *value = NULL;
+
+    fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_DATA);
+    fim_db_bind_registry_data_name_key_id(fim_sql, FIMDB_STMT_GET_REG_DATA, name, key_id);
+
+    if (sqlite3_step(fim_sql->stmt[FIMDB_STMT_GET_REG_DATA]) == SQLITE_ROW) {
+        value = fim_db_decode_registry_data_row(fim_sql->stmt[FIMDB_STMT_GET_REG_DATA]);
+    }
+
+    return value;
+}
+
+fim_registry_key *fim_db_get_registry_key(fdb_t *fim_sql, const char *path) {
+    fim_registry_key *reg_key = NULL;
+
+    fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_KEY);
+    fim_db_bind_registry_path(fim_sql, FIMDB_STMT_GET_REG_KEY, path);
+
+    if (sqlite3_step(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY]) == SQLITE_ROW) {
+        reg_key = fim_db_decode_registry_key_row(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY]);
+    }
+
+    return reg_key;
 }
 
 int fim_db_get_registry_keys_range(fdb_t *fim_sql, char *start, char *top, fim_tmp_file **file, int storage) {
@@ -1777,7 +1838,7 @@ int fim_db_get_count_registry_data(fdb_t *fim_sql) {
 }
 
 
-int fim_db_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, int key_id) {
+int fim_db_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, unsigned int key_id) {
     int res = 0;
 
     fim_db_clean_stmt(fim_sql, FIMDB_STMT_REPLACE_REG_DATA);
@@ -1791,7 +1852,7 @@ int fim_db_insert_registry_data(fdb_t *fim_sql, fim_registry_value_data *data, i
     return FIMDB_OK;
 }
 
-int fim_db_insert_registry_key(fdb_t *fim_sql, fim_registry_key *entry, int rowid) {
+int fim_db_insert_registry_key(fdb_t *fim_sql, fim_registry_key *entry, unsigned int rowid) {
     int res = 0;
 
     fim_db_clean_stmt(fim_sql, FIMDB_STMT_REPLACE_REG_KEY);
@@ -1813,6 +1874,8 @@ int fim_db_insert_registry(fdb_t *fim_sql, fim_entry *new) {
         fim_db_get_registry_key_rowid(fim_sql, new->registry_entry.key->path, &new->registry_entry.key->id);
         res_data = fim_db_insert_registry_data(fim_sql, new->registry_entry.value, new->registry_entry.key->id);
     //}
+
+    fim_db_check_transaction(fim_sql);
 
     return res_data || res_key;
 }

@@ -153,8 +153,7 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_entries, unsigned int n
 int main(int argc, char *argv[]) {
 
     if (argc < 3) {
-        fprintf(stderr, "\n./fim_db <number-rand-keys> <number-rand-values>\n\n"
-                        "\t- types{mem|disk}\n");
+        fprintf(stderr, "\n./fim_db <number-rand-keys> <number-rand-values>\n\n");
         return 1;
     }
 
