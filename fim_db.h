@@ -732,6 +732,35 @@ int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid);
 
 fim_registry_key *fim_db_decode_registry_key(sqlite3_stmt *stmt);
 
-fim_registry_value_data *fim_db_decode_registry_value(sqlite3_stmt *stmt, int offset);
+fim_registry_value_data *_fim_db_decode_registry_value(sqlite3_stmt *stmt, int offset);
 
 fim_entry *fim_db_decode_registry(int index, sqlite3_stmt *stmt);
+
+
+
+
+int fim_db_remove_registry_key(fdb_t *fim_sql, fim_entry *entry);
+int fim_db_remove_registry_value_data(fdb_t *fim_sql, fim_registry_value_data *entry);
+
+/**
+ * @brief Read paths which are stored in a temporal storage.
+ *
+ * @param fim_sql FIM database structure.
+ * @param mutex
+ * @param storage 1 Store database in memory, disk otherwise.
+ * @param callback Function to call within a step.
+ * @param mode FIM mode for callback function.
+ * @param w_evt Whodata information for callback function.
+ *
+ */
+ int fim_db_process_read_file(fdb_t *fim_sql,
+                                     fim_tmp_file *file,
+                                     int type,
+                                     pthread_mutex_t *mutex,
+                                     void (*callback)(fdb_t *, fim_entry *, pthread_mutex_t *, void *, void *, void *),
+                                     int storage,
+                                     void * alert,
+                                     void * mode,
+                                     void * w_evt);
+
+int fim_db_get_values_from_registry_key(fdb_t * fim_sql, fim_tmp_file **file, int storage, unsigned long int key_id);

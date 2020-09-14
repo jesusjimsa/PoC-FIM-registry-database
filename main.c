@@ -20,6 +20,8 @@
 
 #define loop_path(x) (x[0] == '.' && (x[1] == '\0' || (x[1] == '.' && x[2] == '\0')))
 
+void fim_registry_process_unscanned_entries();
+
 void announce_function(char *function) {
     printf("\n***Testing %s***\n", function);
 }
@@ -199,4 +201,11 @@ int main(int argc, char *argv[]) {
     fim_db_get_registry_data_not_scanned(fim_sql, &file2, FIM_DB_DISK);
 
     fim_db_force_commit(fim_sql);
+
+    fim_db_set_all_registry_key_unscanned(fim_sql);
+    // fim_db_get_registry_keys_not_scanned(fim_sql, &file, FIM_DB_DISK);
+    fim_db_force_commit(fim_sql);
+
+    fim_registry_process_unscanned_entries(fim_sql);
+
 }
