@@ -728,11 +728,11 @@ int fim_db_get_count_registry_data(fdb_t * fim_sql);
  *
  * @return FIMDB_OK on success, FIMDB_ERR otherwise.
  */
-int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid);
+int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, unsigned int *rowid);
 
 fim_registry_key *fim_db_decode_registry_key(sqlite3_stmt *stmt);
 
-fim_registry_value_data *fim_db_decode_registry_value(sqlite3_stmt *stmt, int offset);
+fim_registry_value_data * fim_db_decode_registry_value(sqlite3_stmt *stmt);
 
 fim_entry *fim_db_decode_registry(int index, sqlite3_stmt *stmt);
 

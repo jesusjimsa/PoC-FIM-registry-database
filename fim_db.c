@@ -1552,7 +1552,7 @@ int fim_db_get_count(fdb_t *fim_sql, int index) {
 
 // #ifdef WIN32
 
-int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid) {
+int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, unsigned int *rowid) {
     int res;
     fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_ROWID);
     fim_db_bind_registry_path(fim_sql, FIMDB_STMT_GET_REG_ROWID, path);
@@ -1628,7 +1628,6 @@ fim_entry *fim_db_decode_registry(int index, sqlite3_stmt *stmt) {
     }
 
     if (index == FIMDB_STMT_GET_REG_DATA || index == FIMDB_STMT_GET_REG_DATA_NOT_SCANNED) {
-        // The offset has to be 10 because the decoding of the registry key
         entry->registry_entry.value = fim_db_decode_registry_value(stmt);
     }
 

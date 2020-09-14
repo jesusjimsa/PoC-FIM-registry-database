@@ -140,7 +140,7 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_
         snprintf(reg_path, 512, "%s_%i\\", DEF_REG_PATH, i);
 
         fim_registry_key *key = fill_registry_key_struct(i, reg_path, DEF_PERM, DEF_UID, DEF_GID, DEF_USER_NAME,
-                                                         DEF_GROUP_NAME, rand() % 1500000000, rand() % 2, 1,
+                                                         DEF_GROUP_NAME, rand() % 1500000000, rand() % 2, rand() % 2,
                                                          DEF_SHA1_HASH);
 
         for (j = 0; j < num_entries; j++) {
@@ -148,7 +148,7 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_
             snprintf(reg_name, 512, "%s%i", DEF_REG_NAME, j);
 
             fim_registry_value_data *value = fill_registry_value_struct(i, reg_name, rand() % 11, rand() % 256,
-                                                                        DEF_MD5_HASH, DEF_SHA1_HASH, DEF_SHA256_HASH, 1,
+                                                                        DEF_MD5_HASH, DEF_SHA1_HASH, DEF_SHA256_HASH, rand() % 2,
                                                                         rand() % 1500000000, DEF_SHA1_HASH,
                                                                         FIM_SCHEDULED);
 
@@ -305,19 +305,19 @@ int main(int argc, char *argv[]) {
     // Read registry data file
     announce_function("fim_db_process_read_registry_data_file");
     gettime(&start);
+    if (file2 != NULL) {
+        res = fim_db_process_read_registry_data_file(fim_sql, file2, NULL, print_entry, FIM_DB_DISK, NULL, NULL, NULL);
 
-    res = fim_db_process_read_registry_data_file(fim_sql, file2, NULL, print_entry, FIM_DB_DISK, NULL, NULL, NULL);
+        if (res == FIMDB_ERR) {
+            merror("Could not read registry data file.");
+            fim_db_force_commit(fim_sql);
+            free_entry(entry);
+            return 1;
+        }
 
-    if (res == FIMDB_ERR) {
-        merror("Could not read registry data file.");
-        fim_db_force_commit(fim_sql);
-        free_entry(entry);
-        return 1;
+        gettime(&end);
+        printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
     }
-
-    gettime(&end);
-    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
-
     // Get registry data
     announce_function("fim_db_get_registry_data");
     gettime(&start);
