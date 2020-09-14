@@ -70,7 +70,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_REG_PATH_RANGE] = "SELECT id, path, perm, uid, gid, user_name, group_name, mtime, arch, registry_key.scanned, registry_key.checksum, key_id, name, type, size, hash_md5, hash_sha1, hash_sha256, registry_data.scanned, last_event, registry_data.checksum FROM registry_key INNER JOIN registry_data ON registry_data.key_id = registry_key.id WHERE path BETWEEN ? and ? ORDER BY path;",
     [FIMDB_STMT_SET_REG_KEY_SCANNED] = "UPDATE registry_data SET scanned = 1 WHERE name = ? AND key_id = ?;",
     [FIMDB_STMT_SET_REG_DATA_SCANNED] = "UPDATE registry_key SET scanned = 1 WHERE path = ?;",
-    [FIMDB_STMT_GET_REG_KEY_ROWID] = "SELECT path, perm, uid, gid, user_name, group_name, mtime, scanned, checksum, arch FROM registry_key WHERE id = ?;",
+    [FIMDB_STMT_GET_REG_KEY_ROWID] = "SELECT id, path, perm, uid, gid, user_name, group_name, mtime, arch, scanned, checksum FROM registry_key WHERE id = ?;",
 // #endif
 };
 
@@ -207,15 +207,9 @@ static int fim_db_create_file(const char *path, const char *source, const int st
  * @param w_evt Whodata information for callback function.
  *
  */
- static int fim_db_process_read_file(fdb_t *fim_sql,
-                                     fim_tmp_file *file,
-                                     int type,
-                                     pthread_mutex_t *mutex,
+ static int fim_db_process_read_file(fdb_t *fim_sql, fim_tmp_file *file, int type, pthread_mutex_t *mutex,
                                      void (*callback)(fdb_t *, fim_entry *, pthread_mutex_t *, void *, void *, void *),
-                                     int storage,
-                                     void * alert,
-                                     void * mode,
-                                     void * w_evt);
+                                     int storage, void * alert, void * mode, void * w_evt);
 
 
 /**
@@ -735,8 +729,8 @@ int fim_db_process_missing_entry(fdb_t *fim_sql, fim_tmp_file *file, pthread_mut
 }
 
 int fim_db_process_read_file(fdb_t *fim_sql, fim_tmp_file *file, int type, pthread_mutex_t *mutex,
-    void (*callback)(fdb_t *, fim_entry *, pthread_mutex_t *, void *, void *, void *),
-    int storage, void * alert, void * mode, void * w_evt) {
+                             void (*callback)(fdb_t *, fim_entry *, pthread_mutex_t *, void *, void *, void *),
+                             int storage, void * alert, void * mode, void * w_evt) {
     char line[PATH_MAX + 1];
     char *path = NULL;
     int i = 0;
@@ -748,14 +742,15 @@ int fim_db_process_read_file(fdb_t *fim_sql, fim_tmp_file *file, int type, pthre
     do {
 
         if (storage == FIM_DB_DISK) {
-            /* fgets() adds \n(newline) to the end of the string,
-             So it must be removed. */
+            // fgets() adds \n(newline) to the end of the string,
+            // so it must be removed.
             if (fgets(line, sizeof(line), file->fd)) {
                 size_t len = strlen(line);
 
                 if (len > 2 && line[len - 1] == '\n') {
                     line[len - 1] = '\0';
-                } else {
+                }
+                else {
                     merror("Temporary path file '%s' is corrupt: missing line end.", file->path);
                     continue;
                 }
@@ -768,12 +763,16 @@ int fim_db_process_read_file(fdb_t *fim_sql, fim_tmp_file *file, int type, pthre
 
         if (path) {
             w_mutex_lock(mutex);
-            fim_entry *entry = type == FIM_TYPE_FILE ? fim_db_get_path(fim_sql, path) : NULL /*fim_db_get_registry(fim_sql, path)*/;
+            fim_entry *entry = type == FIM_TYPE_FILE ? fim_db_get_path(fim_sql, path) :
+                                                       fim_db_get_registry_key(fim_sql, path);
+
             w_mutex_unlock(mutex);
+
             if (entry != NULL) {
                 callback(fim_sql, entry, mutex, alert, mode, w_evt);
                 free_entry(entry);
             }
+
             os_free(path);
         }
 
@@ -1563,6 +1562,7 @@ int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, int *rowid) 
 
     return FIMDB_OK;
 }
+
 fim_registry_key *fim_db_decode_registry_key(sqlite3_stmt *stmt) {
     fim_registry_key *entry;
     os_calloc(1, sizeof(fim_registry_key), entry);
@@ -1579,6 +1579,7 @@ fim_registry_key *fim_db_decode_registry_key(sqlite3_stmt *stmt) {
     entry->scanned = (unsigned int)sqlite3_column_int(stmt, 9);
     strncpy(entry->checksum, (char *)sqlite3_column_text(stmt, 10), sizeof(os_sha1) - 1);
     entry->scanned = (unsigned int)sqlite3_column_int(stmt, 11);
+
     return entry;
 }
 
@@ -1596,11 +1597,13 @@ fim_registry_value_data *_fim_db_decode_registry_value(sqlite3_stmt *stmt, int o
     entry->scanned = (unsigned int)sqlite3_column_int(stmt, offset + 7);
     entry->last_event = (unsigned int)sqlite3_column_int(stmt, offset + 8);
     strncpy(entry->checksum, (char *)sqlite3_column_text(stmt, offset + 9), sizeof(os_sha1) - 1);
+
     return entry;
 }
 
 fim_entry *fim_db_decode_registry(int index, sqlite3_stmt *stmt) {
     fim_entry *entry = NULL;
+
     os_calloc(1, sizeof(fim_entry), entry);
 
     entry->type = FIM_TYPE_REGISTRY;
@@ -1608,14 +1611,18 @@ fim_entry *fim_db_decode_registry(int index, sqlite3_stmt *stmt) {
     entry->registry_entry.value = NULL;
 
     // Registry key
-    if (index == FIMDB_STMT_GET_REG_KEY_NOT_SCANNED || index == FIMDB_STMT_GET_REG_KEY_ROWID ||
+    if (index == FIMDB_STMT_GET_REG_KEY_NOT_SCANNED ||
+        index == FIMDB_STMT_GET_REG_KEY_ROWID ||
         index == FIMDB_STMT_GET_REG_KEY) {
+
         entry->registry_entry.key = fim_db_decode_registry_key(stmt);
     }
+
     if (index == FIMDB_STMT_GET_REG_DATA || index == FIMDB_STMT_GET_REG_DATA_NOT_SCANNED) {
         // The offset has to be 10 because the decoding of the registry key
         entry->registry_entry.value = fim_db_decode_registry_value(stmt);
     }
+
     return entry;
 }
 
