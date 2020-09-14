@@ -187,6 +187,8 @@ int main(int argc, char *argv[]) {
     unsigned int num_keys = atoi(argv[1]);
     unsigned int num_values = atoi(argv[2]);
 
+    int res = 0;
+
     struct timespec start, end, commit;
 
     // Init DB
@@ -212,34 +214,175 @@ int main(int argc, char *argv[]) {
     gettime(&end);
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
 
-    printf("Number of registries %d\n", fim_db_get_count_registry_key(fim_sql));
-    printf("Number of registries %d\n", fim_db_get_count_registry_data(fim_sql));
+    // Count registry keys
+    announce_function("fim_db_get_count_registry_key");
+    gettime(&start);
+
+    res = fim_db_get_count_registry_key(fim_sql);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not get count of registry keys.");
+        fim_db_force_commit(fim_sql);
+        return 1;
+    }
+
+    printf("Number of registry keys %d\n", res);
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Count registry values
+    announce_function("fim_db_get_count_registry_data");
+    gettime(&start);
+
+    res = fim_db_get_count_registry_data(fim_sql);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not get count of registry values.");
+        fim_db_force_commit(fim_sql);
+        return 1;
+    }
+
+    printf("Number of registry values %d\n", res);
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Get registry keys not scanned
+    announce_function("fim_db_get_registry_keys_not_scanned");
+    gettime(&start);
 
     fim_tmp_file * file, *file2;
-    fim_db_get_registry_keys_not_scanned(fim_sql, &file, FIM_DB_DISK);
 
-    fim_db_get_registry_data_not_scanned(fim_sql, &file2, FIM_DB_DISK);
+    res = fim_db_get_registry_keys_not_scanned(fim_sql, &file, FIM_DB_DISK);
 
-    fim_entry * entry;
+    if (res == FIMDB_ERR) {
+        merror("Could not get not scanned registry keys.");
+        fim_db_force_commit(fim_sql);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Get registry values not scanned
+    announce_function("fim_db_get_registry_data_not_scanned");
+    gettime(&start);
+
+    res = fim_db_get_registry_data_not_scanned(fim_sql, &file2, FIM_DB_DISK);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not get not scanned registry values.");
+        fim_db_force_commit(fim_sql);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    fim_entry *entry;
     os_calloc(1, sizeof(fim_entry), entry);
     entry->type = FIM_TYPE_REGISTRY;
 
+    // Get registry key using id
     announce_function("fim_db_get_registry_key_using_id");
+    gettime(&start);
+
     entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, 1);
+
+    if (entry->registry_entry.key == NULL) {
+        merror("Could not get registry key using id.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
     print_fim_registry_key_data(entry);
-    fim_db_force_commit(fim_sql);
 
+    // Read registry data file
     announce_function("fim_db_process_read_registry_data_file");
-    int res = fim_db_process_read_registry_data_file(fim_sql, file2, NULL, print_entry, FIM_DB_DISK, NULL, NULL, NULL);
+    gettime(&start);
 
+    res = fim_db_process_read_registry_data_file(fim_sql, file2, NULL, print_entry, FIM_DB_DISK, NULL, NULL, NULL);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not read registry data file.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Get registry data
     announce_function("fim_db_get_registry_data");
+    gettime(&start);
+
     entry->registry_entry.value = fim_db_get_registry_data(fim_sql, entry->registry_entry.key->id, "reg_name_0");
+
+    if (entry->registry_entry.value == NULL) {
+        merror("Could not get registry data from id and name.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Remove registry value
     announce_function("fim_db_remove_registry_value_data");
-    fim_db_remove_registry_value_data(fim_sql, entry->registry_entry.value);
-    fim_db_force_commit(fim_sql);
+    gettime(&start);
+
+    res = fim_db_remove_registry_value_data(fim_sql, entry->registry_entry.value);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not remove registry value.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Get registry key using id
+    announce_function("fim_db_get_registry_key_using_id");
+    gettime(&start);
 
     entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, 2);
+
+    if (entry->registry_entry.key == NULL) {
+        merror("Could not get registry key using id.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    // Remove registry key
     announce_function("fim_db_remove_registry_key");
-    fim_db_remove_registry_key(fim_sql, entry);
+    gettime(&start);
+
+    res = fim_db_remove_registry_key(fim_sql, entry);
+
+    if (res == FIMDB_ERR) {
+        merror("Could not remove registry key.");
+        fim_db_force_commit(fim_sql);
+        free_entry(entry);
+        return 1;
+    }
+
+    gettime(&end);
+    printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
+
+    free_entry(entry);
+
     fim_db_force_commit(fim_sql);
 }
