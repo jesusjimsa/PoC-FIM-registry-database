@@ -91,7 +91,7 @@ void print_fim_registry_key_data(fim_entry *entry) {
     printf("GID: %s\n", entry->registry_entry.key->gid);
     printf("User name: %s\n", entry->registry_entry.key->user_name);
     printf("Group name: %s\n", entry->registry_entry.key->group_name);
-    print("Modification time: %d\n", entry->registry_entry.key->mtime);
+    printf("Modification time: %d\n", entry->registry_entry.key->mtime);
     printf("Architecture: %d\n", entry->registry_entry.key->arch);
     printf("Scanned: %d\n", entry->registry_entry.key->scanned);
     printf("Checksum: %s\n", entry->registry_entry.key->checksum);
