@@ -54,8 +54,6 @@ static fim_registry_value_data *fill_registry_value_struct(unsigned int id, char
     return data;
 }
 
-
-
 static fim_registry_key *fill_registry_key_struct(unsigned int id, char *path, char *perm, char *uid, char *gid,
                                                   char *user_name, char *group_name, unsigned int mtime, int arch,
                                                   unsigned int scanned, os_sha1 checksum) {
@@ -135,14 +133,16 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_
     unsigned int i, j;
     fim_entry *entry = NULL;
 
+    entry = calloc(1, sizeof(fim_entry));
+    entry->type = FIM_TYPE_REGISTRY;
+
     for(i = 0; i < num_keys; i++) {
         char *reg_path = calloc(512, sizeof(char));
         snprintf(reg_path, 512, "%s_%i\\", DEF_REG_PATH, i);
-
         fim_registry_key *key = fill_registry_key_struct(i, reg_path, DEF_PERM, DEF_UID, DEF_GID, DEF_USER_NAME,
                                                          DEF_GROUP_NAME, rand() % 1500000000, rand() % 2, rand() % 2,
                                                          DEF_SHA1_HASH);
-
+        entry->registry_entry.key = key;
         for (j = 0; j < num_entries; j++) {
             char *reg_name = calloc(512, sizeof(char));
             snprintf(reg_name, 512, "%s%i", DEF_REG_NAME, j);
@@ -151,26 +151,21 @@ int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_
                                                                         DEF_MD5_HASH, DEF_SHA1_HASH, DEF_SHA256_HASH, rand() % 2,
                                                                         rand() % 1500000000, DEF_SHA1_HASH,
                                                                         FIM_SCHEDULED);
-
-            entry = calloc(1, sizeof(fim_entry));
-
-            entry->type = FIM_TYPE_REGISTRY;
-            entry->registry_entry.key = key;
             entry->registry_entry.value = value;
 
             if (fim_db_insert_registry(fim_sql, entry)) {
                 printf("Error in fim_db_insert_registry() function: %s\n", reg_name);
+                free_registry_value(value);
                 return FIMDB_ERR;
             }
-
             free_registry_value(value);
             free(reg_name);
         }
 
-        free(entry);
         free_registry_key(key);
         free(reg_path);
     }
+    free(entry);
 
     return 0;
 }
@@ -353,7 +348,7 @@ int main(int argc, char *argv[]) {
     // Get registry key using id
     announce_function("fim_db_get_registry_key_using_id");
     gettime(&start);
-
+    free_registry_key(entry->registry_entry.key);
     entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, 2);
 
     if (entry->registry_entry.key == NULL) {
@@ -384,5 +379,12 @@ int main(int argc, char *argv[]) {
 
     free_entry(entry);
 
+    fim_tmp_file *file3;
+    res = fim_db_get_values_from_registry_key(fim_sql, &file3, FIM_DB_DISK, 1);
+
     fim_db_force_commit(fim_sql);
+    fim_db_clean_file(&file, FIM_DB_DISK);
+    fim_db_clean_file(&file3, FIM_DB_DISK);
+    fim_db_close(fim_sql);
+    free(fim_sql);
 }

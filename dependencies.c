@@ -265,6 +265,7 @@ void free_registry_key(fim_registry_key *key) {
     if (key->group_name) {
         os_free(key->group_name);
     }
+    os_free(key);
 }
 
 void free_registry_value(fim_registry_value_data *data) {
@@ -275,6 +276,9 @@ void free_registry_value(fim_registry_value_data *data) {
     if (data->name) {
         os_free(data->name);
     }
+
+    os_free(data);
+
 }
 
 void free_entry(fim_entry * entry) {

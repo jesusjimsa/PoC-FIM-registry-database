@@ -7,7 +7,9 @@
  */
 
 #include "fim_db.h"
-#define fim_db_decode_registry_value(stmt) _fim_db_decode_registry_value(stmt, 0)
+#define FIM_DB_DECODE_TYPE(_func) (void *(*)(sqlite3_stmt *))(_func)
+#define FIM_DB_CALLBACK_TYPE(_func) (void (*)(fdb_t *, void *, int,  void *))(_func)
+
 #define fim_db_decode_registry_value_full_row(stmt) _fim_db_decode_registry_value(stmt, 11)
 static const char *SQL_STMT[] = {
     // Files
@@ -71,7 +73,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_SET_REG_KEY_SCANNED] = "UPDATE registry_data SET scanned = 1 WHERE name = ? AND key_id = ?;",
     [FIMDB_STMT_SET_REG_DATA_SCANNED] = "UPDATE registry_key SET scanned = 1 WHERE path = ?;",
     [FIMDB_STMT_GET_REG_KEY_ROWID] = "SELECT id, path, perm, uid, gid, user_name, group_name, mtime, arch, scanned, checksum FROM registry_key WHERE id = ?;",
-// #endif
+    [FIMDB_STMT_GET_REG_DATA_ROWID] = "SELECT key_id, name, type, size, hash_md5, hash_sha1, hash_sha256, scanned, last_event, checksum FROM registry_data WHERE key_id = ?;",
 };
 
 /**
@@ -220,12 +222,6 @@ static int fim_db_create_file(const char *path, const char *source, const int st
 static fim_tmp_file *fim_db_create_temp_file(int storage);
 
 
-/**
- * @brief Clean and free resources
- * @param file Storage structure
- * @param storage Type of storage (memory or disk)
- */
-static void fim_db_clean_file(fim_tmp_file **file, int storage);
 
 /**
  * @brief
@@ -340,6 +336,17 @@ static void fim_db_bind_update_registry_key(fdb_t *fim_sql, fim_registry_key *re
  */
 static void fim_db_bind_get_registry_key_id(fdb_t *fim_sql, const unsigned int id);
 
+static void fim_db_bind_get_registry_data_key_id(fdb_t *fim_sql, const unsigned int key_id) {
+    sqlite3_bind_int(fim_sql->stmt[FIMDB_STMT_GET_REG_DATA_ROWID], 1, key_id);
+}
+
+/**
+ * @brief Bind id into get registry value statement.
+ *
+ * @param fim_sql FIM database structure.
+ * @param key_id ID of the registry key.
+ */
+static void fim_db_bind_get_registry_data_key_id(fdb_t *fim_sql, const unsigned int key_id);
 
 char * wstr_escape_json(const char * string) {
     const char escape_map[] = {
@@ -1976,4 +1983,91 @@ fim_registry_key *fim_db_get_registry_key_using_id(fdb_t *fim_sql, unsigned int 
     }
 
     return reg_key;
+}
+fim_registry_value_data * fim_db_decode_registry_value(sqlite3_stmt *stmt) {
+    return _fim_db_decode_registry_value(stmt, 0);
+}
+
+char *fim_db_decode_key_not_scanned(sqlite3_stmt *stmt) {
+    char *ret;
+    sqlite_strdup((char *)sqlite3_column_text(stmt, 0), ret);
+    return ret;
+}
+
+char *fim_db_decode_value_not_scanned(sqlite3_stmt *stmt) {
+    char buffer[256];
+        char *ret;
+
+    snprintf(buffer, 256, "%d %s", sqlite3_column_int(stmt, 0), (char *)sqlite3_column_text(stmt, 1));
+    os_strdup(buffer, ret);
+
+    return ret;
+}
+
+void fim_db_callback_save_string(__attribute__((unused))fdb_t * fim_sql, char *path, int storage, void *arg) {
+    char *base = path;
+    if (base == NULL) {
+        merror("Error escaping '%s'", path);
+        return;
+    }
+
+    if (storage == FIM_DB_DISK) { // disk storage enabled
+        if ((size_t)fprintf(((fim_tmp_file *) arg)->fd, "%s\n", base) != (strlen(base) + sizeof(char))) {
+            merror("%s - %s", path, strerror(errno));
+        }
+
+             fflush(((fim_tmp_file *) arg)->fd);
+
+    } else {
+        //W_Vector_insert(((fim_tmp_file *) arg)->list, base);
+    }
+
+    ((fim_tmp_file *) arg)->elements++;
+}
+
+int fim_db_get_values_from_registry_key(fdb_t * fim_sql, fim_tmp_file **file, int storage, unsigned long int key_id) {
+    if ((*file = fim_db_create_temp_file(storage)) == NULL) {
+        return FIMDB_ERR;
+    }
+
+    fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_DATA_ROWID);
+    fim_db_bind_get_registry_data_key_id(fim_sql, key_id);
+
+    int ret = fim_db_multiple_row_query(fim_sql, FIMDB_STMT_GET_REG_DATA_ROWID, FIM_DB_DECODE_TYPE(fim_db_decode_value_not_scanned), free,
+                                       FIM_DB_CALLBACK_TYPE(fim_db_callback_save_string), storage, (void*) *file);
+
+    if (*file && (*file)->elements == 0) {
+        fim_db_clean_file(file, storage);
+    }
+
+    return ret;
+}
+
+
+
+int fim_db_multiple_row_query(fdb_t *fim_sql,
+                              int index,
+                              void *(*decode)(sqlite3_stmt *),
+                              void (*free_row)(void *),
+                              void (*callback)(fdb_t *, void *, int, void *),
+                              int storage,
+                              void *arg) {
+    int result;
+    int i;
+
+    if (decode == NULL || callback == NULL || free_row == NULL) {
+        return FIMDB_ERR;
+    }
+
+    for (i = 0; result = sqlite3_step(fim_sql->stmt[index]), result == SQLITE_ROW; i++) {
+        void *decoded_row = decode(fim_sql->stmt[index]);
+        if (decoded_row != NULL) {
+            callback(fim_sql, decoded_row, storage, arg);
+            free_row(decoded_row);
+        }
+    }
+
+    fim_db_check_transaction(fim_sql);
+
+    return result != SQLITE_DONE ? FIMDB_ERR : FIMDB_OK;
 }

@@ -42,6 +42,13 @@
 extern const char *schema_fim_sql;
 
 /**
+ * @brief Clean and free resources
+ * @param file Storage structure
+ * @param storage Type of storage (memory or disk)
+ */
+void fim_db_clean_file(fim_tmp_file **file, int storage);
+
+/**
  * @brief Initialize FIM databases.
  * Checks if the databases exists.
  * If it exists deletes the previous version and creates a new one.
@@ -744,3 +751,39 @@ int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *file, p
 
 int fim_db_remove_registry_value_data(fdb_t *fim_sql, fim_registry_value_data *entry);
 int fim_db_remove_registry_key(fdb_t *fim_sql, fim_entry *entry);
+
+/**
+ * @brief Write a string into the storage pointed by @args.
+ *
+ * @param fim_sql FIM database struct.
+ * @param str     String to be saved into storage.
+ * @param storage 1 Store database in memory, disk otherwise.
+ * @param arg     Storage which contains all the strings.
+ * @return FIMDB_OK on success, FIMDB_ERR otherwise.
+ */
+void fim_db_callback_save_string(fdb_t * fim_sql, char *str, int storage, void *arg);
+
+/**
+ * @brief
+ *
+ * @param fim_sql FIM database structure.
+ * @param index
+ * @param decode
+ * @param free_row
+ * @param callback
+ * @param storage
+ * @param arg
+ * @return FIMDB_OK on success, FIMDB_ERR otherwise.
+ */
+int fim_db_multiple_row_query(fdb_t *fim_sql,
+                              int index,
+                              void *(*decode)(sqlite3_stmt *),
+                              void (*free_row)(void *),
+                              void (*callback)(fdb_t *, void *, int, void *),
+                              int storage,
+                              void *arg);
+int fim_db_get_values_from_registry_key(fdb_t * fim_sql, fim_tmp_file **file, int storage, unsigned long int key_id);
+
+char *fim_db_decode_value_not_scanned(sqlite3_stmt *stmt) ;
+
+char *fim_db_decode_key_not_scanned(sqlite3_stmt *stmt) ;
