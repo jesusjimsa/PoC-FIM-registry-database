@@ -72,6 +72,10 @@ static fim_registry_key *fill_registry_key_struct(char * path, unsigned int id, 
 }
 
 void print_fim_registry_key_data(fim_entry *entry) {
+    if (entry->registry_entry.key == NULL) {
+        return;
+    }
+
     printf("\n~~~ Registry key ~~~\n");
     printf("\n---------------------------------\n");
     printf("Path: %s\n", entry->registry_entry.key->path);
@@ -87,6 +91,9 @@ void print_fim_registry_key_data(fim_entry *entry) {
 }
 
 void print_fim_registry_value_data(fim_entry *entry) {
+    if (entry->registry_entry.value == NULL) {
+        return ;
+    }
     printf("\n~~~ Registry value ~~~\n");
     printf("\n---------------------------------\n");
     printf("Name: %s\n", entry->registry_entry.value->name);
@@ -102,9 +109,19 @@ void print_fim_registry_value_data(fim_entry *entry) {
     printf("---------------------------------\n");
 }
 
+/* Callback para printar entry */
+void print_entry(__attribute__((unused))fdb_t *fim_sql, fim_entry *entry,
+    __attribute__((unused))pthread_mutex_t *mutex, __attribute__((unused))void *alert,
+    __attribute__((unused))void *mode, __attribute__((unused))void *w_event) {
+
+    print_fim_registry_key_data(entry);
+    print_fim_registry_value_data(entry);
+}
+
 #define DEF_REG_NAME "reg_name_"
 #define DEF_REG_PATH "HKEY_LOCAL_MACHINE\\TEST"
-int fill_entries_random(fdb_t *fim_sql, unsigned int num_entries, unsigned int num_keys) {
+
+int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_entries) {
     unsigned int i, j;
     fim_entry *entry = NULL;
 
@@ -198,5 +215,26 @@ int main(int argc, char *argv[]) {
 
     fim_db_get_registry_data_not_scanned(fim_sql, &file2, FIM_DB_DISK);
 
+    fim_entry * entry;
+    os_calloc(1, sizeof(fim_entry), entry);
+    entry->type = FIM_TYPE_REGISTRY;
+
+    announce_function("fim_db_get_registry_key_using_id");
+    entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, 1);
+    print_fim_registry_key_data(entry);
+    fim_db_force_commit(fim_sql);
+
+    announce_function("fim_db_process_read_registry_data_file");
+    int res = fim_db_process_read_registry_data_file(fim_sql, file2, NULL, print_entry, FIM_DB_DISK, NULL, NULL, NULL);
+
+    announce_function("fim_db_get_registry_data");
+    entry->registry_entry.value = fim_db_get_registry_data(fim_sql, entry->registry_entry.key->id, "reg_name_0");
+    announce_function("fim_db_remove_registry_value_data");
+    fim_db_remove_registry_value_data(fim_sql, entry->registry_entry.value);
+    fim_db_force_commit(fim_sql);
+
+    entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, 2);
+    announce_function("fim_db_remove_registry_key");
+    fim_db_remove_registry_key(fim_sql, entry);
     fim_db_force_commit(fim_sql);
 }

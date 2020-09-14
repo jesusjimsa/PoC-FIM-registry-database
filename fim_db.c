@@ -1750,20 +1750,17 @@ fim_registry_value_data *fim_db_get_registry_data(fdb_t *fim_sql, const unsigned
     return entry;
 }
 
-fim_entry *fim_db_get_registry_key(fdb_t *fim_sql, const char *path) {
-    fim_entry *entry = NULL;
-
-    os_calloc(1,sizeof(fim_entry), entry);
-    entry->type = FIM_TYPE_REGISTRY;
+fim_registry_key *fim_db_get_registry_key(fdb_t *fim_sql, const char *path) {
+    fim_registry_key *reg_key = NULL;
 
     fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_KEY);
     fim_db_bind_registry_path(fim_sql, FIMDB_STMT_GET_REG_KEY, path);
 
     if (sqlite3_step(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY]) == SQLITE_ROW) {
-        entry->registry_entry.key = fim_db_decode_registry_key(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY]);
+        reg_key = fim_db_decode_registry_key(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY]);
     }
 
-    return entry;
+    return reg_key;
 }
 
 int fim_db_get_registry_keys_range(fdb_t *fim_sql, char *start, char *top, fim_tmp_file **file, int storage) {
@@ -1886,13 +1883,13 @@ int fim_db_remove_registry_value_data(fdb_t *fim_sql, fim_registry_value_data *e
 }
 
 
-static int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *file, pthread_mutex_t *mutex,
+int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *file, pthread_mutex_t *mutex,
                                      void (*callback)(fdb_t *, fim_entry *, pthread_mutex_t *, void *, void *, void *),
                                      int storage, void * alert, void * mode, void * w_evt) {
 
     char line[PATH_MAX + 1];
     char *name = NULL;
-    int id;
+    unsigned int id;
     int i;
     char *split;
 
@@ -1942,11 +1939,11 @@ static int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *
         os_calloc(1, sizeof(fim_entry), entry);
 
         entry->type = FIM_TYPE_REGISTRY;
-        w_mutex_lock(mutex);
-        // entry->registry_entry.key = fim_db_get_key_reg_rowid(fim_sql, id);
+        //w_mutex_lock(mutex);
+        entry->registry_entry.key = fim_db_get_registry_key_using_id(fim_sql, id);
         entry->registry_entry.value = fim_db_get_registry_data(fim_sql, id, split);
 
-        w_mutex_unlock(mutex);
+        //w_mutex_unlock(mutex);
 
         if (entry != NULL) {
             callback(fim_sql, entry, mutex, alert, mode, w_evt);
@@ -1958,4 +1955,17 @@ static int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *
     fim_db_clean_file(&file, storage);
 
     return FIMDB_OK;
+}
+
+fim_registry_key *fim_db_get_registry_key_using_id(fdb_t *fim_sql, unsigned int id) {
+    fim_registry_key *reg_key = NULL;
+
+    fim_db_clean_stmt(fim_sql, FIMDB_STMT_GET_REG_KEY_ROWID);
+    fim_db_bind_get_registry_key_id(fim_sql, id);
+
+    if (sqlite3_step(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY_ROWID]) == SQLITE_ROW) {
+        reg_key = fim_db_decode_registry_key(fim_sql->stmt[FIMDB_STMT_GET_REG_KEY_ROWID]);
+    }
+
+    return reg_key;
 }
