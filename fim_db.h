@@ -786,4 +786,3 @@ int fim_db_get_values_from_registry_key(fdb_t * fim_sql, fim_tmp_file **file, in
 
 char *fim_db_decode_value_not_scanned(sqlite3_stmt *stmt) ;
 
-char *fim_db_decode_key_not_scanned(sqlite3_stmt *stmt) ;
