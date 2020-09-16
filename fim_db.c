@@ -44,6 +44,7 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_COUNT_PATH] = "SELECT count(*) FROM file_entry",
     [FIMDB_STMT_GET_COUNT_DATA] = "SELECT count(*) FROM file_data",
     [FIMDB_STMT_GET_INODE] = "SELECT inode FROM file_data where rowid=(SELECT inode_id FROM file_entry WHERE path = ?)",
+    // Registries
 // #ifdef WIN32
 
     [FIMDB_STMT_REPLACE_REG_DATA] = "INSERT OR REPLACE INTO registry_data (key_id, name, type, size, hash_md5, hash_sha1, hash_sha256, scanned, last_event, checksum) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
@@ -70,8 +71,8 @@ static const char *SQL_STMT[] = {
     [FIMDB_STMT_GET_FIRST_REG_KEY] = "SELECT path FROM registry_key ORDER BY path ASC LIMIT 1;",
     [FIMDB_STMT_GET_REG_COUNT_RANGE] = "SELECT count(*) FROM registry_key INNER JOIN registry_data ON registry_data.key_id = registry_key.id WHERE path BETWEEN ? and ? ORDER BY path;",
     [FIMDB_STMT_GET_REG_PATH_RANGE] = "SELECT id, path, perm, uid, gid, user_name, group_name, mtime, arch, registry_key.scanned, registry_key.checksum, key_id, name, type, size, hash_md5, hash_sha1, hash_sha256, registry_data.scanned, last_event, registry_data.checksum FROM registry_key INNER JOIN registry_data ON registry_data.key_id = registry_key.id WHERE path BETWEEN ? and ? ORDER BY path;",
-    [FIMDB_STMT_SET_REG_KEY_SCANNED] = "UPDATE registry_data SET scanned = 1 WHERE name = ? AND key_id = ?;",
-    [FIMDB_STMT_SET_REG_DATA_SCANNED] = "UPDATE registry_key SET scanned = 1 WHERE path = ?;",
+    [FIMDB_STMT_SET_REG_DATA_SCANNED] = "UPDATE registry_data SET scanned = 1 WHERE name = ? AND key_id = ?;",
+    [FIMDB_STMT_SET_REG_KEY_SCANNED] = "UPDATE registry_key SET scanned = 1 WHERE path = ?;",
     [FIMDB_STMT_GET_REG_KEY_ROWID] = "SELECT id, path, perm, uid, gid, user_name, group_name, mtime, arch, scanned, checksum FROM registry_key WHERE id = ?;",
     [FIMDB_STMT_GET_REG_DATA_ROWID] = "SELECT key_id, name, type, size, hash_md5, hash_sha1, hash_sha256, scanned, last_event, checksum FROM registry_data WHERE key_id = ?;",
 };
@@ -280,7 +281,7 @@ static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, const int inde
  * @param index Index of the particular statement.
  * @param path Path to registry.
 */
-static void fim_db_bind_registry_path(fdb_t *fim_sql, const int index, const char *path);
+static void fim_db_bind_registry_path(fdb_t *fim_sql, const unsigned int index, const char *path);
 
 
 /**
@@ -942,7 +943,7 @@ void fim_db_bind_range(fdb_t *fim_sql, int index, const char *start, const char 
 static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, const int index, const char *name, const int key_id) {
     if (index == FIMDB_STMT_SET_REG_DATA_UNSCANNED ||
         index == FIMDB_STMT_DELETE_REG_DATA ||
-        index == FIMDB_STMT_SET_REG_KEY_SCANNED ||
+        index == FIMDB_STMT_SET_REG_DATA_SCANNED ||
         index == FIMDB_STMT_GET_REG_DATA) {
 
         sqlite3_bind_text(fim_sql->stmt[index], 1, name, -1, NULL);
@@ -950,13 +951,13 @@ static void fim_db_bind_registry_data_name_key_id(fdb_t *fim_sql, const int inde
     }
 }
 
-static void fim_db_bind_registry_path(fdb_t *fim_sql, const int index, const char *path) {
+static void fim_db_bind_registry_path(fdb_t *fim_sql, const unsigned int index, const char *path) {
     if (index == FIMDB_STMT_GET_REG_KEY ||
         index == FIMDB_STMT_SET_REG_KEY_UNSCANNED ||
         index == FIMDB_STMT_GET_REG_ROWID ||
         index == FIMDB_STMT_DELETE_REG_KEY_PATH ||
         index == FIMDB_STMT_DELETE_REG_DATA_PATH ||
-        index == FIMDB_STMT_SET_REG_DATA_SCANNED) {
+        index == FIMDB_STMT_SET_REG_KEY_SCANNED) {
 
         sqlite3_bind_text(fim_sql->stmt[index], 1, path, -1, NULL);
     }
