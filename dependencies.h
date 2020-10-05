@@ -159,8 +159,8 @@ gid_t Privsep_GetGroup(const char *name) __attribute__((nonnull));
 #define w_rwlock_wrlock(x) { int error = pthread_rwlock_wrlock(x); if (error) exit(1); }
 #define w_rwlock_unlock(x) { int error = pthread_rwlock_unlock(x); if (error) exit(1); }
 #define w_mutex_init(x, y) { int error = pthread_mutex_init(x, y); if (error) exit(1); }
-#define w_mutex_lock(x) { int error = pthread_mutex_lock(x); if (error) exit(1); }
-#define w_mutex_unlock(x) { int error = pthread_mutex_unlock(x); if (error) exit(1); }
+#define w_mutex_lock(x)
+#define w_mutex_unlock(x)
 void gettime(struct timespec *ts);
 double time_diff(const struct timespec * a, const struct timespec * b);
 int file_sha256(int fd, char sum[SHA256_LEN]);

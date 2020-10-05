@@ -41,16 +41,17 @@ CREATE INDEX IF NOT EXISTS dev_inode_index ON file_data (dev, inode);
 
 CREATE TABLE IF NOT EXISTS registry_key (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    path TEXT NOT NULL UNIQUE,
+    path TEXT NOT NULL,
+    arch TEXT NOT NULL,
     perm TEXT,
     uid INTEGER,
     gid INTEGER,
     user_name TEXT,
     group_name TEXT,
     mtime INTEGER,
-    arch INTEGER,
     scanned INTEGER,
-    checksum TEXT NOT NULL
+    checksum TEXT NOT NULL,
+    UNIQUE(path, arch)
 );
 
 CREATE INDEX IF NOT EXISTS path_index ON registry_key (path);

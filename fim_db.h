@@ -445,7 +445,7 @@ fim_registry_value_data *fim_db_get_registry_data(fdb_t *fim_sql, const unsigned
  *
  * @return FIM registry key struct on success, NULL on error.
 */
-fim_registry_key *fim_db_get_registry_key(fdb_t *fim_sql, const char *path);
+fim_registry_key *fim_db_get_registry_key(fdb_t *fim_sql, const char *path, int arch);
 
 /**
  * @brief Get all the key paths
@@ -577,7 +577,7 @@ int fim_db_set_all_registry_data_unscanned(fdb_t *fim_sql);
  * @param path Registry key path.
  * @return FIMDB_OK on success, FIMDB_ERR otherwise.
  */
-int fim_db_set_registry_key_scanned(fdb_t *fim_sql, char *path);
+int fim_db_set_registry_key_scanned(fdb_t *fim_sql, char *path, int arch);
 
 /**
  * @brief Set a registry data as scanned
@@ -735,7 +735,7 @@ int fim_db_get_count_registry_data(fdb_t * fim_sql);
  *
  * @return FIMDB_OK on success, FIMDB_ERR otherwise.
  */
-int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, unsigned int *rowid);
+int fim_db_get_registry_key_rowid(fdb_t *fim_sql, const char *path, unsigned int *rowid, int arch);
 
 fim_registry_key *fim_db_decode_registry_key(sqlite3_stmt *stmt);
 
@@ -751,6 +751,7 @@ int fim_db_process_read_registry_data_file(fdb_t *fim_sql, fim_tmp_file *file, p
 
 int fim_db_remove_registry_value_data(fdb_t *fim_sql, fim_registry_value_data *entry);
 int fim_db_remove_registry_key(fdb_t *fim_sql, fim_entry *entry);
+void fim_db_remove_registry_key1(fdb_t *fim_sql, fim_entry *entry, pthread_mutex_t *, void *, void *, void *);
 
 /**
  * @brief Write a string into the storage pointed by @args.
@@ -786,3 +787,12 @@ int fim_db_get_values_from_registry_key(fdb_t * fim_sql, fim_tmp_file **file, in
 
 char *fim_db_decode_value_not_scanned(sqlite3_stmt *stmt) ;
 
+void print_entry(__attribute__((unused))fdb_t *fim_sql,
+                 fim_entry *entry,
+                 __attribute__((unused))pthread_mutex_t *mutex,
+                 __attribute__((unused))void *alert,
+                 __attribute__((unused))void *mode,
+                 __attribute__((unused))void *w_event);
+
+void print_fim_registry_value_data(fim_entry *entry);
+void print_fim_registry_key_data(fim_entry *entry);

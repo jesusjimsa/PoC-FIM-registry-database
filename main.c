@@ -15,7 +15,7 @@
 #include <openssl/sha.h>
 
 #define DEF_REG_NAME "reg_name_"
-#define DEF_REG_PATH "HKEY_LOCAL_MACHINE\\TEST"
+#define DEF_REG_PATH "HKEY_LOCAL_MACHINE\\TEST 1"
 #define DEF_PERM "-rwxrwxrwx"
 #define DEF_UID "0"
 #define DEF_GID "0"
@@ -73,60 +73,6 @@ static fim_registry_key *fill_registry_key_struct(unsigned int id, char *path, c
     snprintf(data->checksum, 65, "%s", checksum);
 
     return data;
-}
-
-void print_fim_registry_key_data(fim_entry *entry) {
-    if (entry->registry_entry.key == NULL) {
-        return;
-    }
-
-    printf("\n~~~ Registry key ~~~\n");
-    printf("\n---------------------------------\n");
-    printf("ID: %d\n", entry->registry_entry.key->id);
-    printf("Path: %s\n", entry->registry_entry.key->path);
-    printf("Perm: %s\n", entry->registry_entry.key->perm);
-    printf("UID: %s\n", entry->registry_entry.key->uid);
-    printf("GID: %s\n", entry->registry_entry.key->gid);
-    printf("User name: %s\n", entry->registry_entry.key->user_name);
-    printf("Group name: %s\n", entry->registry_entry.key->group_name);
-    printf("Modification time: %d\n", entry->registry_entry.key->mtime);
-    printf("Architecture: %d\n", entry->registry_entry.key->arch);
-    printf("Scanned: %d\n", entry->registry_entry.key->scanned);
-    printf("Checksum: %s\n", entry->registry_entry.key->checksum);
-    printf("---------------------------------\n");
-}
-
-void print_fim_registry_value_data(fim_entry *entry) {
-    if (entry->registry_entry.value == NULL) {
-        return ;
-    }
-
-    printf("\n~~~ Registry value ~~~\n");
-    printf("\n---------------------------------\n");
-    printf("ID: %d\n", entry->registry_entry.value->id);
-    printf("Name: %s\n", entry->registry_entry.value->name);
-    printf("Type: %d\n", entry->registry_entry.value->type);
-    printf("Size: %d\n", entry->registry_entry.value->size);
-    printf("Hash MD5: %s\n", entry->registry_entry.value->hash_md5);
-    printf("Hash SHA1: %s\n", entry->registry_entry.value->hash_sha1);
-    printf("Hash SHA256: %s\n", entry->registry_entry.value->hash_sha256);
-    printf("Scanned: %d\n", entry->registry_entry.value->scanned);
-    printf("Last event: %lu\n", entry->registry_entry.value->last_event);
-    printf("Checksum: %s\n", entry->registry_entry.value->checksum);
-    printf("Mode: %i\n", entry->registry_entry.value->mode);
-    printf("---------------------------------\n");
-}
-
-/* Callback para printar entry */
-void print_entry(__attribute__((unused))fdb_t *fim_sql,
-                 fim_entry *entry,
-                 __attribute__((unused))pthread_mutex_t *mutex,
-                 __attribute__((unused))void *alert,
-                 __attribute__((unused))void *mode,
-                 __attribute__((unused))void *w_event) {
-
-    print_fim_registry_key_data(entry);
-    print_fim_registry_value_data(entry);
 }
 
 int fill_entries_random(fdb_t *fim_sql, unsigned int num_keys, unsigned int num_entries) {
@@ -205,6 +151,7 @@ int main(int argc, char *argv[]) {
     gettime(&start);
 
     fill_entries_random(fim_sql, num_keys, num_values);
+    fim_db_force_commit(fim_sql);
 
     gettime(&end);
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
@@ -247,7 +194,7 @@ int main(int argc, char *argv[]) {
     announce_function("fim_db_get_registry_keys_not_scanned");
     gettime(&start);
 
-    fim_tmp_file * file, *file2;
+    fim_tmp_file *file, *file2;
 
     res = fim_db_get_registry_keys_not_scanned(fim_sql, &file, FIM_DB_DISK);
 
@@ -260,6 +207,8 @@ int main(int argc, char *argv[]) {
     gettime(&end);
     printf("Time elapsed: %f\n", (double) time_diff(&end, &start));
 
+    fim_db_delete_registry_keys_not_scanned(fim_sql, file, NULL, FIM_DB_DISK);
+    return 1;
     // Get registry values not scanned
     announce_function("fim_db_get_registry_data_not_scanned");
     gettime(&start);
@@ -383,7 +332,6 @@ int main(int argc, char *argv[]) {
     res = fim_db_get_values_from_registry_key(fim_sql, &file3, FIM_DB_DISK, 1);
 
     fim_db_force_commit(fim_sql);
-    fim_db_clean_file(&file, FIM_DB_DISK);
     fim_db_clean_file(&file3, FIM_DB_DISK);
     fim_db_close(fim_sql);
     free(fim_sql);
