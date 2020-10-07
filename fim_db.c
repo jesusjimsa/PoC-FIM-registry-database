@@ -1550,7 +1550,7 @@ void fim_db_callback_save_path(__attribute__((unused))fdb_t * fim_sql, fim_entry
     }
 
     if (entry->type == FIM_TYPE_FILE) {
-        write_buffer = wstr_escape_json(path);
+        write_buffer = base;
         line_length = strlen(write_buffer);
     } else {
         os_calloc(MAX_DIR_SIZE, sizeof(char), write_buffer);
